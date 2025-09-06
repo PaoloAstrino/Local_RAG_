@@ -1,0 +1,2 @@
+retrieval_method,total_questions,exact_matches,match_rate,recall_at_5,hit_rate_at_5,recall_at_10,hit_rate_at_10,mrr,mean_rank,median_rank,rank_1_count,dataset,evaluation_date,evaluation_time,device_used,benchmark_compliant,hybrid_sparse_weight,hybrid_dense_weight,weight_configuration
+Hybrid,10570,10471,0.9906338694418164,0.8221381267738883,0.8221381267738883,0.848155156102176,0.848155156102176,0.7334994435614144,4.471588195969821,1.0,6922,SQUAD_OFFICIAL,2025-06-22,04:52:59,cuda,True,0.8,0.2,Sparse-Dominant (80/20)

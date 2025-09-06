@@ -1,0 +1,2 @@
+retrieval_method,total_queries,queries_with_relevant,evaluation_errors,recall_at_10,hit_rate_at_10,recall_at_100,hit_rate_at_100,recall_at_1000,hit_rate_at_1000,mrr_at_10,dataset,evaluation_date,evaluation_time,device_used,benchmark_compliant,hybrid_sparse_weight,hybrid_dense_weight,weight_configuration
+Hybrid,9373,9373,0,0.3461805185106156,0.3555958604502294,0.5542337920978697,0.5594793555958605,0.6195455030406487,0.6202923290301932,0.15743925899959185,MS_MARCO_OFFICIAL,2025-06-21,22:49:30,cuda,True,0.7,0.3,Keyword-Dominant (70/30)
