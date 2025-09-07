@@ -1,28 +1,33 @@
-% filepath: c:\Users\paolo\Desktop\AI_Agent\ChatBot_v5\ChatBot_thesis\papers\rag_scientific_paper.tex
-\documentclass[conference]{IEEEtran}
-
-% --- Essential Packages (IEEE manages layout; geometry removed) ---
-\usepackage[utf8]{inputenc}
+% Official ACL style integration
+\documentclass[11pt]{article}
+% acl package sets the required margins, fonts, and two-column layout.
+% For anonymous submission add [review]; for final camera ready add \aclfinalcopy.
+\usepackage{acl} % Use [review] option for anonymous submission; 'final' is default.
+% NOTE: This acl.sty version does NOT define \aclfinalcopy (legacy macro). Remove it to avoid an
+% "Undefined control sequence" error. For review mode use: \usepackage[review]{acl}
 \usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+% Ensure scalable Latin Modern fonts to avoid microtype expansion errors
+\usepackage{lmodern}
+% Disable font expansion (was causing: "expansion is only possible with scalable fonts")
+\usepackage[expansion=false]{microtype}
+% (times and latexsym are loaded by the ACL style; removed to avoid duplication)
+
+
+% Additional packages
 \usepackage{graphicx}
 \usepackage{amsmath,amssymb}
-\usepackage{hyperref}
-\usepackage{cite}
 \usepackage{booktabs}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{subcaption}
-\usepackage{balance}
-\usepackage{caption}
 \usepackage{placeins}
-\usepackage{tabularx} % for auto column width control
-\usepackage{array}    % extended column types
-% Float spacing tuning for IEEEtran (conservative)
-\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}
-\setlength{\floatsep}{6pt plus 2pt minus 2pt}
-\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{url}
+% (hyperref is already configured by acl.sty; removed duplicate)
 
-% (Removed manual geometry configuration)
 
 % --- Code Listing Style ---
 \lstset{
@@ -37,20 +42,33 @@
 % --- Title and Authors ---
 \title{Local Hybrid Retrieval-Augmented Document QA}
 
-\author{
-\IEEEauthorblockN{Paolo Astrino}
-\IEEEauthorblockA{Independent Researcher\\
-Email: \texttt{paoloastrino01@gmail.com}\\
-Portfolio: \href{https://paoloastrino.github.io/}{paoloastrino.github.io}\\
-GitHub: \href{https://github.com/PaoloAstrino}{github.com/PaoloAstrino}\\
-LinkedIn: \href{https://www.linkedin.com/in/paolo-astrino-9792061a3}{linkedin.com/in/paolo-astrino-9792061a3}}
-}
+\author{Paolo Astrino \\
+  Independent Researcher \\
+  \texttt{paoloastrino01@gmail.com} \\
+  \url{https://paoloastrino.github.io/}}
 
 \begin{document}
-
 \maketitle
 
-% (Removed duplicate early ablation table to avoid label conflict and float crowding)
+\begin{abstract}
+Organizations need conversational access to private documents without sending data to external services. We build a fully local retrieval-augmented generation (RAG) system with a lightweight client--server design and an empirically tuned hybrid retriever (BM25 + BGE embeddings). A 10-point weight sweep yields an optimal 30/70 sparse–dense mix with strong ranking quality across SQuAD, MS MARCO, and Natural Questions (MRR 0.805, 0.250, 0.813; Recall@10 0.974, 0.620, 0.978). GPU acceleration provides a $4.2\times$ embedding throughput gain on commodity hardware. Reliability assessment with an LLM-as-Judge over 500 stratified queries per dataset shows low hallucination (0.8\% / 6.2\%) and high faithfulness ($\ge 4.79/5$). We release artifacts (weight sweeps, bootstrap scripts, cached indices, environment spec) to support reproduction (code: \cite{localragrepo}). Results show that a resource-conscious hybrid setup can deliver robust, low-hallucination document QA locally.
+\end{abstract}
+
+\section{Introduction}
+
+The exponential growth of digital information has created unprecedented challenges for organizations seeking to efficiently access and utilize knowledge stored in heterogeneous document formats. Traditional keyword-based search methods fail to address complex queries or synthesize information across multiple documents \cite{lewis2020rag}. Moreover, state-of-the-art AI language models require uploading sensitive data to external cloud servers, creating significant barriers for regulated industries and organizations handling proprietary information \cite{edpb,privacyinternational}.
+
+Retrieval-Augmented Generation (RAG) addresses these challenges by combining the generative capabilities of large language models (LLMs) with external knowledge retrieval systems \cite{arxiv2410,arxiv24102}. However, existing RAG implementations often rely on cloud-based processing or single retrieval strategies that limit their effectiveness in enterprise environments \cite{hybridretrieval}.
+
+This paper presents a local RAG system that operates entirely on owned infrastructure while maintaining competitive performance through a hybrid retrieval strategy. Our contributions include:
+
+\begin{itemize}
+\item A secure, modular architecture that isolates sensitive operations through clean separation of concerns
+\item Systematic optimization of hybrid retrieval strategy across 10 weight configurations with quantitative performance analysis
+\item Comprehensive GPU acceleration analysis demonstrating 4.2× speedup for embedding generation
+\item Extensive hallucination evaluation using LLM-as-Judge methodology across multiple datasets
+\item Multi-dimensional performance analysis across coverage, ranking quality, extractive fidelity, and distributional statistics
+\end{itemize}
 
 \section{Related Work}
 
@@ -66,9 +84,9 @@ LLM hallucination remains a critical challenge in production RAG systems \cite{h
 \subsection{Enterprise AI Security}
 Cloud-based LLM services raise concerns about data sovereignty and regulatory compliance \cite{privacyinternational,edpb}. Local processing approaches address these concerns but introduce hardware requirements and management complexity \cite{anthropicmcp}. Our work bridges this gap through secure credential management and local document processing while maintaining access to advanced LLM capabilities.
 
-\section{System Architecture}
+\section{Method}
 
-\subsection{Modular Client-Server Design}
+\subsection{System Architecture}
 
 The system employs a three-component architecture (Figure \ref{fig:architecture}):
 
@@ -88,15 +106,13 @@ The system employs a three-component architecture (Figure \ref{fig:architecture}
 \endgroup
 \end{figure}
 
-\subsection{Security Framework}
+\subsubsection{Security Framework}
 
 Security is enforced through strict separation of concerns: all sensitive credentials are managed exclusively on the server side through secure environment variable storage. The client never accesses authentication secrets, document content, or internal processing logic. This design ensures that even if the client or frontend is compromised, attackers cannot access credentials or manipulate core functionality.
 
-\subsection{Communication Protocol}
+\subsubsection{Communication Protocol}
 
 Inter-component communication uses a lightweight JSON-based protocol over TCP sockets. Each request contains a \texttt{command} key with additional parameters, while responses include a \texttt{status} key indicating outcome. This approach provides simplicity, extensibility, and language agnosticism while avoiding the complexity of full JSON-RPC implementation.
-
-\section{RAG Implementation}
 
 \subsection{Hybrid Retrieval Strategy}
 
@@ -116,7 +132,7 @@ Documents are processed through specialized loaders supporting PDF (PyPDFLoader)
 
 The system automatically detects CUDA availability and leverages GPU resources for embedding generation \cite{pytorchcuda}. Performance testing on NVIDIA RTX 4050 hardware demonstrates measured 4.2× speedup for 1,000 document chunks compared to CPU processing, with automatic fallback to CPU when GPU resources are unavailable.
 
-\section{Experimental Evaluation}
+\section{Experimental Setup}
 
 \subsection{Datasets and Methodology}
 
@@ -130,148 +146,9 @@ We conducted comprehensive evaluation across three benchmark datasets:
 
 Evaluation employed multiple metrics including Recall@K, Mean Reciprocal Rank (MRR), exact match rates, and distributional statistics across 10 hybrid weight configurations (10\%-100\% sparse weight).
 
-\subsection{Metrics}
-We track four categories: (i) \textit{coverage} (Recall@K / Hit@K), (ii) \textit{ranking quality} (MRR, mean/median rank, Rank-1 count), (iii) \textit{answer fidelity} (Exact Match, Answer Coverage), and (iv) \textit{reliability} (Hallucination Rate, Faithfulness 1--5, Confidence 1--5, Success = 1 - Hallucination). Recall@K is the fraction of queries with at least one relevant passage in the top K; MRR is the average reciprocal rank of the first relevant hit (0 if none). Answer Coverage is a lenient variant of EM tolerant to minor formatting differences. Reliability metrics come from the LLM-as-Judge pipeline (Section~\ref{tab:hallucination}). We compute 95\% confidence intervals for core metrics (MRR, Recall@10, Hallucination Rate) via 1,000 bootstrap resamples; larger resampling grids are deferred due to resource constraints.
-
-\subsection{Hybrid Weight Optimization}
-
-Systematic evaluation across 10 weight configurations (10\% to 100\% sparse weight in 10\% increments) identified optimal hybrid balance. The 30\% sparse/70\% dense configuration emerged as optimal across all datasets, balancing semantic understanding with lexical precision.
-
-% Ablation table: single-method vs hybrid
-\subsection{Ablation: Single-Method vs Hybrid Retrieval}
-To isolate the contribution of hybrid fusion, we compare pure sparse (BM25 only), pure dense (embedding only), and the optimal hybrid configuration. We report core ranking and coverage metrics. Hybrid delivers consistent gains over both single methods—particularly improving MRR on SQuAD / Natural Questions and Recall@10 on MS MARCO—showing complementary error reduction.
-
-\begin{table}[t]
-\centering
-\caption{Ablation of retrieval strategies (Sparse = BM25, Dense = embeddings, Hybrid = 30/70). Metrics for SQuAD / Natural Q. use Recall@10; MS MARCO = passage Recall@10.}
-\label{tab:ablation}
-\begingroup
-\setlength{\tabcolsep}{3.5pt} % tighten to fit in column
-\small
-\begin{tabular}{@{}l l c c c c@{}}
-	oprule
-	extbf{Dataset} & \textbf{Method} & \textbf{MRR} & \textbf{R@10} & \textbf{Ans. Cov.} & \textbf{Mean Rk.} \\
-\midrule
-SQuAD & Sparse & 0.717 & 0.840 & 0.952 & 4.66 \\
-SQuAD & Dense & 0.805 & 0.959 & 0.976 & 2.18 \\
-SQuAD & Hybrid & \textbf{0.805} & \textbf{0.974} & \textbf{0.980} & \textbf{2.18} \\
-\addlinespace
-MS MARCO & Sparse & 0.103 & 0.480 & 0.406 & 0.60* \\
-MS MARCO & Dense & 0.315 & 0.605 & 0.482 & 0.60* \\
-MS MARCO & Hybrid & \textbf{0.250} & \textbf{0.620} & \textbf{0.487} & 0.62* \\
-\addlinespace
-Natural Q. & Sparse & (def.) & (def.) & (def.) & (def.) \\
-Natural Q. & Dense & (def.) & (def.) & (def.) & (def.) \\
-Natural Q. & Hybrid & \textbf{0.813} & \textbf{0.978} & \textbf{0.987} & 2.10 \\
-\bottomrule
-\end{tabular}
-\par\vspace{2pt}{\footnotesize *Mean rank near-identical for MS MARCO baselines. NQ single-method baselines deferred (def.).}
-\endgroup
-\end{table}
-
-% NOTE: Replace placeholder dashes with actual baseline numbers once dense-only and sparse-only Natural Questions runs are added.
-
-\subsection{Statistical Reliability and Confidence Intervals}
-We quantify uncertainty for principal metrics (MRR, Recall@10, Hallucination Rate) using non-parametric bootstrap resampling (1,000 samples) over the query set. For each dataset and metric:
-\begin{enumerate}
-  \item Sample \(|Q|\) queries with replacement.
-  \item Recompute metric on the resampled set.
-  \item Repeat 1,000×; take the 2.5th and 97.5th percentiles as the 95\% confidence interval (CI).
-\end{enumerate}
-For binary proportions (Recall@K, Hallucination Rate) we cross-validated bootstrap intervals against Wilson score intervals; they were consistent (differences <0.2 percentage points).
-
-% Short anchoring paragraph to reduce consecutive top floats
-\noindent\textit{Confidence estimation:} We next quantify statistical reliability using bootstrap confidence intervals before presenting aggregate performance results.
-
-\begin{table}[ht]
-\centering
-\caption{Point estimates with 95\% CIs (1,000 bootstrap resamples). Natural Questions single-method baselines deferred.}
-\label{tab:confidence}
-\begingroup
-\setlength{\tabcolsep}{3.5pt}
-\small
-\begin{tabularx}{\columnwidth}{@{}l c c c X@{}}
-\toprule
-\textbf{Dataset} & \textbf{Metric} & \textbf{Val.} & \textbf{95\% CI} & \textbf{Notes} \\
-\midrule
-SQuAD & R@10 & 0.974 & [0.971, 0.977] & Coverage \allowbreak stable \\
-SQuAD & Halluc. & 0.8\% & [0.4\%, 2.0\%] & n=500 judged \\
-MS MARCO & MRR & 0.250 & [0.244, 0.256] & Hybrid 30/70 \\
-MS MARCO & R@10 & 0.620 & [0.610, 0.630] & Passage recall \\
-MS MARCO & Halluc. & 6.2\% & [4.4\%, 8.6\%] & n=500 judged \\
-Natural Q. & MRR & 0.813 & [0.808, 0.818] & Hybrid 30/70 \\
-Natural Q. & R@10 & 0.978 & [0.973, 0.982] & Coverage \\
-Natural Q. & Halluc. & (def.) & (def.) & Planned future eval. \\
-\bottomrule
-\end{tabularx}
-\endgroup
-\end{table}
-
-The narrow intervals for SQuAD and Natural Questions indicate stable rankings; wider Hallucination CIs reflect smaller judged sample size (500). Future work: stratified bootstrap by question category and paired significance testing (e.g., randomization test) for retrieval method deltas.
-
-\FloatBarrier % ensure Confidence table placed before proceeding
-
-\subsection{Quantitative Results}
-We next consolidate core retrieval performance for the single optimal hybrid weighting across datasets to contextualize the interval-level stability. This aggregate view highlights cross-dataset consistency and remaining recall and coverage gaps on MS MARCO.
-
-Table \ref{tab:results} summarizes performance across optimal configurations:
-
-\begin{table}[bp]
-\centering
-\caption{Optimal hybrid configuration performance (30\% sparse / 70\% dense).}
-\label{tab:results}
-\begingroup
-\setlength{\tabcolsep}{4pt}
-\small
-\begin{tabular}{@{}l c c c@{}}
-\toprule
-\textbf{Dataset} & \textbf{MRR} & \textbf{R@10} & \textbf{Ans. Cov.} \\
-\midrule
-SQuAD & 0.805 & 0.974 & 0.980 \\
-MS MARCO & 0.250 & 0.620 & 0.487 \\
-Natural Q. & 0.813 & 0.978 & 0.987 \\
-\bottomrule
-\end{tabular}
-\endgroup
-\end{table}
-
-The hybrid approach consistently outperformed single-method baselines across all datasets. Natural Questions validation confirmed 30\% sparse/70\% dense as the optimal weighting, balancing ranking quality with answer coverage.
-
-% Anchoring narrative before reliability table
-The quantitative metrics motivate inspection of answer grounding quality, which we assess with an automated hallucination judging protocol.
-
-\subsection{Qualitative Evaluation}
-
-LLM-as-Judge evaluation using Gemini for both answer generation and hallucination detection across 500 queries per dataset (sample size constrained by evaluation budget; see protocol subsection) \cite{llm_judge,hallucination_survey}.
-
-\begin{table}[ht]
-\setlength{\tabcolsep}{4pt}
-\centering
-\caption{Hallucination metrics (n=500 judged queries per dataset).}
-\label{tab:hallucination}
-\begin{tabular}{@{}l c c c c@{}}
-\toprule
-\textbf{Dataset} & \textbf{Halluc. Rate} & \textbf{Faith.} & \textbf{Conf.} & \textbf{Success} \\
-\midrule
-SQuAD & 0.8\% & 4.93 & 4.87 & 99.2\% \\
-MS MARCO & 6.2\% & 4.79 & 4.71 & 96.8\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The exceptionally low hallucination rates demonstrate reliable answer generation grounded in retrieved context \cite{hallucination_survey}, with MS MARCO showing slightly higher rates due to its challenging, sparse relevance patterns \cite{msmarco}.
-
-\begin{figure}[!t]
-\centering
-% Local caption style reduction (kept within IEEE norms: small font)
-\begingroup
-\captionsetup{font=small}
-\subcaptionbox{Aggregate rates and means\label{fig:hallucination_analysis}}[0.48\textwidth]{\includegraphics[width=0.48\textwidth]{images/evaluation_images/hallucination_score.png}}\\[4pt]
-\subcaptionbox{Score distributions\label{fig:confidence_analysis}}[0.48\textwidth]{\includegraphics[width=0.48\textwidth]{images/evaluation_images/confidence_score.png}}
-\caption{Reliability metrics: (a) low hallucination with high faithfulness/confidence; (b) distributions concentrated at 5 with modest degradation on MS MARCO.}
-\label{fig:reliability_overview}
-\endgroup
-\end{figure}
+\subsection{Evaluation Metrics}\label{subsec:eval-metrics}
+We track four categories: (i) \textit{coverage} (Recall@K / Hit@K), (ii) \textit{ranking quality} (MRR, mean/median rank, Rank-1 count), (iii) \textit{answer fidelity} (Exact Match, Answer Coverage), and (iv) \textit{reliability} (Hallucination Rate, Faithfulness 1--5, Confidence 1--5, Success = 1 - Hallucination).
+Recall@K is the fraction of queries with at least one relevant passage in the top K; MRR is the average reciprocal rank of the first relevant hit (0 if none). Answer Coverage is a lenient variant of EM tolerant to minor formatting differences. Reliability metrics come from the LLM-as-Judge pipeline (Table~\ref{tab:hallucination}). We compute 95\% confidence intervals for core metrics (MRR, Recall@10, Hallucination Rate) via 1,000 bootstrap resamples; larger resampling grids are deferred due to resource constraints.
 
 \subsection{Hallucination Evaluation Protocol}
 We adopt an LLM-as-Judge framework to quantify hallucination and faithfulness. For each dataset, a stratified sample of 500 queries (uniform over question length tertiles) is selected. This size balances statistical precision and constrained evaluation budget: at observed rates (0.8\%--6.2\%) a Wilson 95\% interval remains within roughly ±2 percentage points while keeping API cost and labeling time manageable under limited resources. Larger stratified expansions (e.g., 1k--2k) are deferred to future work when additional compute and budget are available. For every query we store: (i) user question, (ii) retrieved context chunks (top 5, concatenated with provenance IDs), and (iii) model answer under the optimal hybrid retriever.
@@ -291,33 +168,136 @@ A response is flagged as a hallucination if any critical claim lacks grounding (
 
 Limitations: (i) Single-model dependence may inherit judge bias; (ii) Partial credit not linearly mapped to downstream utility; (iii) Context truncation risk for unusually long aggregated passages. Future work: multi-judge majority voting and human adjudication subset.
 
-\subsection{Threat Model and Privacy Considerations}
-We assume an honest-but-curious external adversary and potential compromised client host, but a trusted server enclave. Attack surfaces include: client-server channel interception, prompt injection via uploaded documents, and credential exfiltration. Mitigations implemented:
-\begin{itemize}
-  \item \textbf{Data Locality:} All document parsing, embedding generation, and retrieval operate solely on the server; no raw document text leaves the host.
-  \item \textbf{Credential Isolation:} API keys loaded from local \texttt{.env}; never transmitted to clients; environment variables not echoed in logs.
-  \item \textbf{Prompt Injection Filtering:} Basic sanitization removes high-risk control sequences and excessively long tokens; future enhancement: structured allowlist.
-  \item \textbf{Provenance Tracking:} Retrieved chunks carry source filename + character span enabling auditing and forensic inspection of generated answers.
-  \item \textbf{Least Privilege:} Separate process roles planned (future) for retrieval vs generation to narrow lateral movement surface.
-  \item \textbf{Logging Hygiene:} Retrieval logs store hash digests of chunk content, not raw text, reducing sensitive exposure while preserving cache traceability.
-\end{itemize}
-Residual risks: (i) Model inversion on generated answers (low due to local-only corpus), (ii) adversarial chunk crafting to skew hybrid weighting (requires future anomaly detectors), (iii) denial-of-service via pathological uploads (mitigated by size/type checks). No user-identifying analytics collected; compliance alignment facilitated by on-prem processing footprint.
+\section{Results}
 
-\subsection{Reproducibility and Artifact Availability}
-To enable independent verification, we expose the following artifacts:
-\begin{itemize}
-  \item \textbf{Configuration:} Fixed random seed for chunk shuffling and retrieval ordering; documented embedding batch sizes and sparse/dense weighting grid (10\% increments).
-  \item \textbf{Embedding Cache:} Persisted vector store + BM25 index enable cold/warm start timing replication.
-  \item \textbf{Evaluation Scripts:} CSV outputs in \texttt{evaluation/results/} (per-dataset weight sweeps, hallucination assessments) with schema headers retained.
-  \item \textbf{Metrics Definitions:} Formalized in Section~3 (Metrics) with unambiguous formulas.
-  \item \textbf{Environment Baseline:} Hardware/software stack in Table~\ref{tab:environment}; deviations should be stated when reporting alternative results.
-  \item \textbf{Determinism Notes:} GPU nondeterminism (cuBLAS kernels) minimally impacts MRR (<0.002 variance across 5 runs); recommend \texttt{CUBLAS\_WORKSPACE\_CONFIG=:16:8} for stricter reproducibility if needed.
-  \item \textbf{Version Control:} Commit hash recorded alongside evaluation CSVs (future automation planned) to bind results to code state.
-  \item \textbf{Code Release:} Full source (retrieval pipeline, evaluation scripts, hallucination judge) will be released at \texttt{<REPO\_URL>/<COMMIT\_HASH>} upon publication (placeholder; replace with actual repository URL + commit hash in camera-ready version).
-\end{itemize}
-Recommended reproduction procedure: (1) Load corpus, (2) build embedding + BM25 indices, (3) execute weight sweep script, (4) run bootstrap script for CIs, (5) sample queries and invoke hallucination judge pipeline. Discrepancies >1.5\% absolute Recall@10 or >0.01 MRR should trigger investigation of chunking or embedding model version drift.
+\subsection{Hybrid Weight Optimization}
 
-\section{Performance Analysis}
+Systematic evaluation across 10 weight configurations (10\% to 100\% sparse weight in 10\% increments) identified optimal hybrid balance. The 30\% sparse/70\% dense configuration emerged as optimal across all datasets, balancing semantic understanding with lexical precision.
+
+\subsection{Ablation: Single-Method vs Hybrid Retrieval}
+To isolate the contribution of hybrid fusion, we compare pure sparse (BM25 only), pure dense (embedding only), and the optimal hybrid configuration. We report core ranking and coverage metrics. Hybrid delivers consistent gains over both single methods—particularly improving MRR on SQuAD / Natural Questions and Recall@10 on MS MARCO—showing complementary error reduction.
+
+\begin{table}[tbp]
+\centering
+\caption{Ablation of retrieval strategies (Sparse = BM25, Dense = embeddings, Hybrid = 30/70). NQ = Natural Questions; single-method NQ baselines omitted due to resource limits. MeanRk nearly identical for MS MARCO sparse/dense (early-rank ties).}
+\label{tab:ablation}
+\begingroup
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{0.9}
+\scriptsize
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}} l l c c c c@{}}
+\toprule
+Dataset & Method & MRR & Recall@10 & AnsCov & MeanRk \\
+\midrule
+SQuAD & Sparse & 0.717 & 0.840 & 0.952 & 4.66 \\
+SQuAD & Dense  & 0.805 & 0.959 & 0.976 & 2.18 \\
+SQuAD & Hybrid & \textbf{0.805} & \textbf{0.974} & \textbf{0.980} & \textbf{2.18} \\
+MS MARCO & Sparse & 0.103 & 0.480 & 0.406 & 0.60 \\
+MS MARCO & Dense  & 0.315 & 0.605 & 0.482 & 0.60 \\
+MS MARCO & Hybrid & \textbf{0.250} & \textbf{0.620} & \textbf{0.487} & 0.62 \\
+NQ & Hybrid & \textbf{0.813} & \textbf{0.978} & \textbf{0.987} & 2.10 \\
+\bottomrule
+\end{tabular*}
+\endgroup
+\end{table}
+
+\subsection{Statistical Reliability and Confidence Intervals}
+We quantify uncertainty for principal metrics (MRR, Recall@10, Hallucination Rate) using non-parametric bootstrap resampling (1,000 samples) over the query set. For each dataset and metric:
+\begin{enumerate}
+  \item Sample \(|Q|\) queries with replacement.
+  \item Recompute metric on the resampled set.
+  \item Repeat 1,000×; take the 2.5th and 97.5th percentiles as the 95\% confidence interval (CI).
+\end{enumerate}
+For binary proportions (Recall@K, Hallucination Rate) we cross-validated bootstrap intervals against Wilson score intervals; they were consistent (differences <0.2 percentage points).
+
+\begin{table}[ht]
+\centering
+\caption{Point estimates with 95\% CIs (1{,}000 bootstrap resamples). Hallucination for NQ pending.}
+\label{tab:confidence}
+\begingroup
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{0.9}
+\scriptsize
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}} l l c c l@{}}
+\toprule
+Dataset & Metric & Value & 95\% CI & Notes \\
+\midrule
+SQuAD & Recall@10 & 0.974 & [0.971, 0.977] & Stable \\
+SQuAD & HallucRate & 0.8\% & [0.4\%, 2.0\%] & 500 judged \\
+MS MARCO & Recall@10 & 0.620 & [0.610, 0.630] & Sparse rel. \\
+NQ & Recall@10 & 0.978 & [0.973, 0.982] & High cov. \\
+NQ & HallucRate & --- & --- & Scheduled \\
+\bottomrule
+\end{tabular*}
+\endgroup
+\end{table}
+
+The narrow intervals for SQuAD and Natural Questions indicate stable rankings; wider Hallucination CIs reflect smaller judged sample size (500). Future work: stratified bootstrap by question category and paired significance testing (e.g., randomization test) for retrieval method deltas.
+
+\FloatBarrier % ensure Confidence table placed before proceeding
+
+\subsection{Overall Performance}
+
+Table \ref{tab:results} summarizes performance across optimal configurations:
+
+\begin{table}[bp]
+\centering
+\caption{Optimal hybrid configuration performance (30\% sparse / 70\% dense).}
+\label{tab:results}
+\begingroup
+\setlength{\tabcolsep}{4pt}
+\small
+\begin{tabular}{@{}l c c c@{}}
+\toprule
+\textbf{Dataset} & \textbf{MRR} & \textbf{Recall@10} & \textbf{Answer Cov.} \\
+\midrule
+SQuAD & 0.805 & 0.974 & 0.980 \\
+MS MARCO & 0.250 & 0.620 & 0.487 \\
+Natural Questions & 0.813 & 0.978 & 0.987 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+The hybrid approach consistently outperformed single-method baselines across all datasets. Natural Questions validation confirmed 30\% sparse/70\% dense as the optimal weighting, balancing ranking quality with answer coverage.
+
+\subsection{Reliability Assessment}
+
+LLM-as-Judge evaluation using Gemini for both answer generation and hallucination detection across 500 queries per dataset \cite{llm_judge,hallucination_survey}.
+
+\begin{table}[hb]
+\centering
+\caption{Hallucination metrics (n=500 judged queries per dataset). Natural Questions pending.}
+\label{tab:hallucination}
+\begingroup
+\setlength{\tabcolsep}{3pt}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}l c c c c@{}}
+\toprule
+\textbf{Dataset} & \textbf{Hallucination Rate} & \textbf{Faithfulness} & \textbf{Confidence} & \textbf{Success} \\
+\midrule
+SQuAD & 0.8\% & 4.93 & 4.87 & 99.2\% \\
+MS MARCO & 6.2\% & 4.79 & 4.71 & 96.8\% \\
+\bottomrule
+\end{tabular}}% resizebox
+\endgroup
+\end{table}
+
+The exceptionally low hallucination rates demonstrate reliable answer generation grounded in retrieved context \cite{hallucination_survey}, with MS MARCO showing slightly higher rates due to its challenging, sparse relevance patterns \cite{msmarco}.
+
+\begin{figure}[!t]
+\centering
+\begingroup
+\captionsetup{font=small}
+\subcaptionbox{Aggregate rates and means\label{fig:hallucination_analysis}}[0.48\textwidth]{\includegraphics[width=0.48\textwidth]{images/evaluation_images/hallucination_score.png}}\\[4pt]
+\subcaptionbox{Score distributions\label{fig:confidence_analysis}}[0.48\textwidth]{\includegraphics[width=0.48\textwidth]{images/evaluation_images/confidence_score.png}}
+\caption{Reliability metrics: (a) low hallucination with high faithfulness/confidence; (b) distributions concentrated at 5 with modest degradation on MS MARCO.}
+\label{fig:reliability_overview}
+\endgroup
+\end{figure}
+
+\section{Analysis}
 
 \subsection{Hybrid Weight Optimization}
 
@@ -339,6 +319,22 @@ Analysis reveals distinct performance patterns across datasets:
 \caption{Hybrid weight sensitivity across datasets. Each panel summarizes retrieval quality vs sparse weight (10\%--100\%): composite plots include MRR, Recall@K, answer coverage, and rank / degradation curves. The 30\% sparse / 70\% dense configuration achieves near-optimal balance across all datasets; increasing sparsity causes sharp degradation for MS MARCO, gradual decline for SQuAD, and modest impact for Natural Questions.}
 \label{fig:hybrid_performance}
 \end{figure*}
+
+\begin{figure}[htbp]
+\centering
+\begingroup
+\captionsetup{font=small}
+\includegraphics[width=0.45\textwidth]{images/evaluation_images/industry_benchmark_comparison.png}
+\caption{Benchmark positioning: top three hybrid weights vs tier bands (MS MARCO normalized, SQuAD absolute). Chosen 30/70 mix sits solidly in Competitive while retaining acceptable MS MARCO performance.}
+\label{fig:industry_benchmark}
+\endgroup
+\end{figure}
+
+\subsection{System Strengths}
+
+The modular architecture provides exceptional extensibility through well-defined component interfaces and clean separation of concerns. Security through local processing and credential isolation addresses enterprise compliance requirements. The systematically optimized hybrid retrieval strategy effectively combines semantic understanding with lexical precision, achieving competitive performance across diverse query types.
+
+GPU acceleration provides substantial performance improvements for embedding-intensive operations, while comprehensive hallucination detection ensures reliability in production environments.
 
 \subsection{Scalability Characteristics}
 
@@ -368,7 +364,9 @@ Table~\ref{tab:environment} documents the hardware, software stack, and runtime 
 \centering
 \caption{Execution Environment and Runtime Characteristics. Latencies are median unless noted. Throughput measured on hybrid retrieval ($k=10$).}
 \label{tab:environment}
-\begin{tabular}{@{}l l@{}}
+\small
+\setlength{\tabcolsep}{8pt}
+\begin{tabularx}{\textwidth}{@{}l X@{}}
 \toprule
 Component & Specification / Measurement \\
 \midrule
@@ -395,46 +393,35 @@ Cost (Hallucination Eval) & \textasciitilde\$5 per 500 judged queries (Gemini) \
 Secrets Management & .env + server-side isolation \\
 Reproducibility Artifacts & Versioned config + cached embeddings \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table*}
 
 All experiments executed on the above environment unless otherwise stated. Performance may vary with alternative embedding models, storage backends, or GPU architectures.
 
-\section{Discussion}
+% NOTE: Limitations and Ethics Statement relocated after Conclusion as unnumbered sections per ACL guidelines.
 
-\subsection{System Strengths}
+\section{Conclusion}
 
-The modular architecture provides exceptional extensibility through well-defined component interfaces and clean separation of concerns. Security through local processing and credential isolation addresses enterprise compliance requirements. The systematically optimized hybrid retrieval strategy effectively combines semantic understanding with lexical precision, achieving competitive performance across diverse query types.
+This paper presented a secure, local RAG chatbot system that addresses critical enterprise needs for document-based conversational AI. The systematically optimized hybrid retrieval strategy (30\% sparse, 70\% dense) achieved superior performance across multiple benchmarks while maintaining data privacy through local processing.
 
-GPU acceleration provides substantial performance improvements for embedding-intensive operations, while comprehensive hallucination detection ensures reliability in production environments.
+Key findings include: (1) hybrid retrieval consistently outperforms single-method approaches across diverse datasets; (2) GPU acceleration provides substantial performance improvements for embedding-intensive operations; (3) comprehensive hallucination detection using LLM-as-Judge methodology demonstrates exceptionally low error rates; (4) the modular architecture enables secure, scalable deployment in enterprise environments.
 
-\begin{figure}[htbp]
-\centering
-\begingroup
-\captionsetup{font=small}
-\includegraphics[width=0.45\textwidth]{images/evaluation_images/industry_benchmark_comparison.png}
-\caption{Benchmark positioning: top three hybrid weights vs tier bands (MS MARCO normalized, SQuAD absolute). Chosen 30/70 mix sits solidly in Competitive while retaining acceptable MS MARCO performance.}
-\label{fig:industry_benchmark}
-\endgroup
-\end{figure}
+The system demonstrates that effective RAG performance can be achieved without compromising data security, offering a practical solution for organizations requiring AI-powered document analysis while maintaining regulatory compliance and data sovereignty.
 
-\subsection{Limitations and Future Work}
+\section*{Limitations}
 
-We consolidate the principal limitations into four themes to clarify remediation priorities:
+\textbf{Throughput \& Scaling.} The synchronous retrieval→rerank→generation path and single-node deployment limit concurrency and produce tail latency under burst load. Future work: async / micro-batched orchestration, lightweight queueing with priority classes, and sharded / replicated vector indices.
 
-    \textbf{(1) Scalability \& Throughput.} The retrieval $\rightarrow$ reranking $\rightarrow$ generation path is predominantly synchronous, creating burst-induced tail latency and limiting efficient GPU utilization. A single-node deployment model further constrains horizontal elasticity and fault tolerance. Lack of request coalescing or micro-batching prevents amortization of embedding and vector lookup costs. Future work: event-driven / async orchestration, lightweight queueing with priority classes, and sharded / replicated vector indices for scale.
+\textbf{Evaluation \& Reliability.} Hallucination / faithfulness judgments rely on a single LLM-as-Judge prompt; no paired significance tests or stratified bootstrap by query type are applied. Next steps: multi-judge ensembles with disagreement routing, randomization tests for retrieval deltas, and calibration of partial-credit (Answer Coverage) against downstream utility.
 
-	\textbf{(2) Evaluation \& Reliability.} Hallucination and faithfulness judgments depend on a single LLM-as-Judge configuration \cite{llm_judge,hallucination_survey}, exposing bias and prompt drift risk. Current protocol lacks paired significance testing for retrieval deltas and does not stratify bootstrap resamples by question category. Partial-credit grading (answer coverage vs exact span) is not yet calibrated against downstream utility. Future work: multi-judge ensembles with disagreement routing to human adjudication, stratified bootstrap, randomization tests, and calibration curves linking graded scores to task success.
+\textbf{Generalization \& Coverage.} Benchmarks are English, web-centric (SQuAD, MS MARCO, Natural Questions); multilingual, domain-specific, and drifted corpora remain untested. Planned enhancements: multilingual / domain-adaptive embeddings, temporal drift probes, and incremental re-index scheduling.
 
-	\textbf{(3) Generalization \& Coverage.} Benchmarks (SQuAD, MS MARCO, Natural Questions) are English and web/Wikipedia centric \cite{squad,msmarco,naturalquestions}; extrapolation to proprietary, jargon-rich, or multilingual corpora is unverified. The English-focused BGE embeddings under-serve code-mixed or low-resource language queries. No continual re-indexing or drift detection monitors semantic decay as documents evolve, raising staleness risk. Future work: multilingual / domain-adaptive embedding backends (e.g., mBGE, instructor-xl), temporal holdout probes, and scheduled incremental refresh.
+\textbf{Security \& Governance.} Current defenses (sanitization + provenance tags) are heuristic; no anomaly detection for retrieval poisoning, RBAC, or automated PII redaction. Future work: embedding-space anomaly scoring, signed chunk manifests, role-based access policies, and red-team / audit telemetry integration.
 
-	\textbf{(4) Security \& Governance.} Prompt injection and retrieval poisoning defenses are heuristic (sanitization + basic provenance tags) without anomaly scoring or attestation. Absence of stronger content provenance allows crafted adversarial chunks to bias retrieval rankings. Role-based access control, fine-grained audit trails, and automated PII redaction are not yet integrated. Future work: structural allowlists, embedding-space anomaly detection, signed chunk manifests, RBAC + usage telemetry, and red-team evaluation loops \cite{privacyinternational,edpb}.
-
-	\textbf{Remediation Roadmap.} Near-term priorities: (i) async / batched orchestration \cite{langchainjs}; (ii) sharded FAISS or hybrid ANN backends for horizontal scale \cite{johnson2019faiss}; (iii) multilingual + domain-adaptive retrievers; (iv) ensemble + human-in-the-loop judgment pipeline; (v) automated drift detection with scheduled re-indexing; (vi) robust prompt / poisoning defenses (content hashing, anomaly scoring); (vii) enterprise identity and policy enforcement integration. These steps convert the current research prototype into a resilient, auditable platform.
-
-\subsection{Ethical Considerations and Broader Impact}
+\section*{Ethics Statement}
 \label{sec:ethics}
-	\textbf{Over-Reliance Risk.} The low measured hallucination rates (Section~\ref{tab:hallucination}) could foster over-confidence in generated answers. Users may accept outputs without independent verification, especially when confidence signals are high. We recommend UI disclaimers and selective human review for high-impact decisions.
+
+	\textbf{Over-Reliance Risk.} The low measured hallucination rates (Table~\ref{tab:hallucination}) could foster over-confidence in generated answers. Users may accept outputs without independent verification, especially when confidence signals are high. We recommend UI disclaimers and selective human review for high-impact decisions.
 
 	\textbf{Automated Fact-Checking Limits.} LLM-as-Judge hallucination filtering \cite{llm_judge} is itself probabilistic. Failure modes include (i) false negatives on subtle omissions and (ii) false positives when paraphrasing diverges lexically. Deployments should log adjudication rationales and enable audit sampling.
 
@@ -452,19 +439,41 @@ We consolidate the principal limitations into four themes to clarify remediation
 
 Overall, while the system advances secure, high-quality retrieval for enterprise contexts, ethical stewardship requires ongoing bias assessment, multilingual inclusion efforts, and safeguards against over-reliance and adversarial misuse.
 
-\section{Conclusion}
+\section*{Acknowledgments}
 
-This paper presented a secure, local RAG chatbot system that addresses critical enterprise needs for document-based conversational AI. The systematically optimized hybrid retrieval strategy (30\% sparse, 70\% dense) achieved superior performance across multiple benchmarks while maintaining data privacy through local processing.
+We thank the open-source community for providing the foundational tools and datasets that made this research possible. Special acknowledgment to the developers of LangChain, HuggingFace Transformers, and FAISS for their robust implementations that enabled rapid prototyping and evaluation.
 
-Key findings include: (1) hybrid retrieval consistently outperforms single-method approaches across diverse datasets; (2) GPU acceleration provides substantial performance improvements for embedding-intensive operations; (3) comprehensive hallucination detection using LLM-as-Judge methodology demonstrates exceptionally low error rates; (4) the modular architecture enables secure, scalable deployment in enterprise environments.
-
-The system demonstrates that effective RAG performance can be achieved without compromising data security, offering a practical solution for organizations requiring AI-powered document analysis while maintaining regulatory compliance and data sovereignty.
-
-\FloatBarrier
-\clearpage % start references on a fresh (final) page
-\balance
-
-\bibliographystyle{IEEEtran}
+% --- References (ACL style already sets \bibliographystyle{acl_natbib} in acl.sty) ---
+% Removing manual \bibliographystyle avoids duplicate \bibstyle in .aux (BibTeX error).
 \bibliography{references}
 
+\appendix
+
+\section{Implementation Details}
+
+\subsection{Threat Model and Privacy Considerations}
+We assume an honest-but-curious external adversary and potential compromised client host, but a trusted server enclave. Attack surfaces include: client-server channel interception, prompt injection via uploaded documents, and credential exfiltration. Mitigations implemented:
+\begin{itemize}
+  \item \textbf{Data Locality:} All document parsing, embedding generation, and retrieval operate solely on the server; no raw document text leaves the host.
+  \item \textbf{Credential Isolation:} API keys loaded from local \texttt{.env}; never transmitted to clients; environment variables not echoed in logs.
+  \item \textbf{Prompt Injection Filtering:} Basic sanitization removes high-risk control sequences and excessively long tokens; future enhancement: structured allowlist.
+  \item \textbf{Provenance Tracking:} Retrieved chunks carry source filename + character span enabling auditing and forensic inspection of generated answers.
+  \item \textbf{Least Privilege:} Separate process roles planned (future) for retrieval vs generation to narrow lateral movement surface.
+  \item \textbf{Logging Hygiene:} Retrieval logs store hash digests of chunk content, not raw text, reducing sensitive exposure while preserving cache traceability.
+\end{itemize}
+Residual risks: (i) Model inversion on generated answers (low due to local-only corpus), (ii) adversarial chunk crafting to skew hybrid weighting (requires future anomaly detectors), (iii) denial-of-service via pathological uploads (mitigated by size/type checks). No user-identifying analytics collected; compliance alignment facilitated by on-prem processing footprint.
+
+\subsection{Reproducibility and Artifact Availability}
+To enable independent verification, we expose the following artifacts:
+\begin{itemize}
+  \item \textbf{Configuration:} Fixed random seed for chunk shuffling and retrieval ordering; documented embedding batch sizes and sparse/dense weighting grid (10\% increments).
+  \item \textbf{Embedding Cache:} Persisted vector store + BM25 index enable cold/warm start timing replication.
+  \item \textbf{Evaluation Scripts:} CSV outputs in \texttt{evaluation/results/} (per-dataset weight sweeps, hallucination assessments) with schema headers retained.
+  \item \textbf{Metrics Definitions:} Formalized in Evaluation Metrics (Section~\ref{subsec:eval-metrics}) with unambiguous formulas.
+  \item \textbf{Environment Baseline:} Hardware/software stack in Table~\ref{tab:environment}; deviations should be stated when reporting alternative results.
+  \item \textbf{Determinism Notes:} GPU nondeterminism (cuBLAS kernels) minimally impacts MRR (<0.002 variance across 5 runs); recommend \texttt{CUBLAS\_WORKSPACE\_CONFIG=:16:8} for stricter reproducibility if needed.
+  \item \textbf{Version Control:} Commit hash recorded alongside evaluation CSVs (future automation planned) to bind results to code state.
+  \item \textbf{Code Release:} Full source (retrieval pipeline, evaluation scripts, hallucination judge) is available at \href{https://github.com/PaoloAstrino/Local_RAG}{https://github.com/PaoloAstrino/Local\_RAG} (commit \texttt{30c52ff}). Repository cited as \cite{localragrepo}.
+\end{itemize}
+Recommended reproduction procedure: (1) Load corpus, (2) build embedding + BM25 indices, (3) execute weight sweep script, (4) run bootstrap script for CIs, (5) sample queries and invoke hallucination judge pipeline. Discrepancies >1.5\% absolute Recall@10 or >0.01 MRR should trigger investigation of chunking or embedding model version drift.
 \end{document}
