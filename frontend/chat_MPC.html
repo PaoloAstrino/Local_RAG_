@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>RAG Chatbot</title>
+    <link rel="stylesheet" href="static_MPC/mpc_styles.css" />
+  </head>
+  <body>
+    <div class="chat-container">
+      <div class="upload-area">
+        <h2>MPC RAG Chatbot</h2>
+        <div class="file-input-container">
+          <label for="file-upload" class="file-input-label">Choose Files</label>
+          <input
+            type="file"
+            id="file-upload"
+            accept=".pdf,.csv,.json,.xls,.xlsx"
+            multiple
+          />
+          <span id="file-selection">No file chosen</span>
+        </div>
+        <button onclick="uploadFiles()" class="upload-button">
+          Upload Documents
+        </button>
+        <p class="file-info">Supported formats: PDF, CSV, JSON, XLS, XLSX</p>
+        <div class="management-buttons">
+          <button onclick="resetSystem()" class="reset-button">Reset System</button>
+          <button onclick="getStatus()" class="status-button">Get Status</button>
+          <button onclick="getSupportedFileTypes()" class="filetypes-button">Supported File Types</button>
+        </div>
+        <div class="file-actions">
+          <input type="text" id="filename-action" placeholder="Filename for action..." />
+          <button onclick="deleteFile()" class="delete-button">Delete File</button>
+          <button onclick="updateFile()" class="update-button">Update File</button>
+          <button onclick="getDocumentContent()" class="content-button">Get File Content</button>
+        </div>
+      </div>
+      <div id="chat-area" class="chat-area"></div>
+      <div class="input-area">
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Type your question..."
+        />
+        <button onclick="sendMessage()">Send</button>
+        <button
+          id="stop-generation"
+          onclick="stopGeneration()"
+          class="stop-button"
+          disabled
+        >
+          Stop
+        </button>
+        <button
+          id="download-chat"
+          onclick="downloadChat()"
+          class="download-button"
+        >
+          Download Chat
+        </button>
+        <button
+          id="generate-script"
+          onclick="generateScript()"
+          class="script-button"
+        >
+          Generate Script
+        </button>
+      </div>
+    </div>
+    <script src="static_MPC/mpc_script.js"></script>
+  </body>
+</html>

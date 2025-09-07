@@ -1,0 +1,439 @@
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: #000000;
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+.chat-container {
+  max-width: 800px;
+  margin: 24px auto;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  padding: 24px;
+  position: relative;
+  background-color: #000000;
+}
+.upload-area {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  text-align: center;
+  background-color: #111111;
+}
+.file-input-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+.file-input-label {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+  display: inline-block;
+  border: 1px solid #333333;
+}
+.file-input-label:hover {
+  background: #222222;
+  color: #ffffff;
+}
+.upload-area input[type="file"] {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+#file-selection {
+  flex: 1;
+  min-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 5px 0;
+  color: #cccccc;
+}
+.file-info {
+  margin: 10px 0 0;
+  color: #cccccc;
+  font-size: 0.95em;
+}
+.upload-button,
+.reset-button,
+.status-button,
+.filetypes-button,
+.delete-button,
+.update-button,
+.content-button {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 8px 15px;
+  border-radius: 4px;
+  border: 1px solid #333333;
+  cursor: pointer;
+  margin: 4px 2px;
+}
+.upload-button:hover,
+.reset-button:hover,
+.status-button:hover,
+.filetypes-button:hover,
+.delete-button:hover,
+.update-button:hover,
+.content-button:hover {
+  background: #222222;
+  color: #ffffff;
+}
+.file-list-container {
+  margin-top: 15px;
+  text-align: left;
+  background-color: #191919;
+  border-radius: 5px;
+  padding: 10px;
+  border: 1px solid #222;
+}
+.file-list-container h3 {
+  margin-top: 0;
+  font-size: 1em;
+  color: #bbb;
+}
+#file-list {
+  margin: 0;
+  padding-left: 20px;
+}
+#file-list li {
+  margin-bottom: 5px;
+  font-size: 0.95em;
+  color: #ccc;
+}
+.chat-area {
+  height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden; /* Hide horizontal scrollbar */
+  border: 1px solid #333333;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #000000;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.chat-area::-webkit-scrollbar {
+  width: 0;  /* Chrome, Safari, Opera */
+}
+.message {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  max-width: 80%;
+  color: #ffffff;
+}
+.message pre {
+  white-space: pre-wrap; /* Ensures text wraps */
+  word-wrap: break-word; /* Breaks long words */
+}
+
+.download-script-link {
+  color: #ffffff; /* Make the link white */
+  text-decoration: underline; /* Keep underline for links */
+}
+
+.download-script-link:hover {
+  color: #cccccc; /* Slightly lighter white on hover */
+}
+.you-message {
+  background-color: #222222;
+  align-self: flex-end;
+  margin-left: auto;
+  color: #ffffff;
+}
+.assistant-message {
+  background-color: #111111;
+  border-left: 2px solid #333333;
+}
+.system-message {
+  background-color: #111111;
+  width: 100%;
+  text-align: center;
+  font-style: italic;
+  border: 1px solid #333333;
+}
+.input-area {
+  display: flex;
+}
+#user-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  background-color: #000000;
+  color: #ffffff;
+}
+button {
+  padding: 10px 20px;
+  background-color: #000000;
+  color: #ffffff;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+button:hover {
+  background-color: #222222;
+  color: #ffffff;
+}
+.download-button {
+  background-color: #000000;
+  margin-left: 10px;
+  border: 1px solid #333333;
+}
+.download-button:hover {
+  background-color: #222222;
+}
+.stop-button {
+  background-color: #000000;
+  margin-left: 10px;
+  border: 1px solid #333333;
+}
+.stop-button:hover {
+  background-color: #222222;
+}
+.stop-button:disabled {
+  background-color: #111111;
+  border-color: #333333;
+  cursor: not-allowed;
+}
+#loading-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(10, 10, 10, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: 5px;
+  color: #fff;
+}
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #232323;
+  border-top: 4px solid #bbb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+#typing-indicator {
+  padding: 10px;
+  text-align: center;
+  color: #bbb;
+}
+.typing-dots {
+  display: inline-block;
+}
+.typing-dots span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #bbb;
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+.typing-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.typing-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+/* Video Generation Button Styles */
+.video-button {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 10px 16px;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: normal;
+  margin-left: 10px;
+}
+
+.video-button:hover {
+  background-color: #222222;
+}
+
+.video-button:disabled {
+  background-color: #111111;
+  cursor: not-allowed;
+}
+
+.video-button:disabled:hover {
+  background-color: #111111;
+}
+
+/* Video Generation Modal and Progress Styles */
+.video-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.video-modal-content {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 20px;
+  border-radius: 4px;
+  max-width: 500px;
+  text-align: center;
+  border: 1px solid #333333;
+}
+
+.video-progress {
+  text-align: center;
+  padding: 20px;
+  background-color: #000000;
+  border-radius: 4px;
+  margin: 10px 0;
+  border: 1px solid #333333;
+}
+
+/* Simple Video Progress Styles */
+.video-progress-container {
+  background-color: #111111;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  margin: 15px 0;
+  padding: 20px;
+}
+
+.video-progress-content {
+  text-align: center;
+}
+
+.video-progress-text h3 {
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  font-size: 1.1em;
+  font-weight: normal;
+}
+
+.video-progress-text p {
+  color: #ffffff;
+  margin: 5px 0;
+  font-size: 0.95em;
+}
+
+.progress-note {
+  color: #cccccc;
+  font-size: 0.85em;
+  font-style: italic;
+  margin-top: 10px;
+}
+
+/* Remove all animations and keyframes */
+
+/* Simple Video Result Styles */
+.video-result-container {
+  background-color: #111111;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  margin: 15px 0;
+  padding: 20px;
+}
+
+.video-result-content {
+  text-align: center;
+}
+
+.video-result-text h4 {
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  font-size: 1.1em;
+  font-weight: normal;
+}
+
+.video-result-text p {
+  color: #ffffff;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.video-actions {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.video-link {
+  background-color: #000000;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  border: 1px solid #333333;
+  font-weight: normal;
+}
+
+.video-link:hover {
+  background-color: #222222;
+}
+
+.copy-button {
+  background-color: #000000;
+  color: #ffffff;
+  border: 1px solid #333333;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.copy-button:hover {
+  background-color: #222222;
+}
+
+.video-note {
+  color: #cccccc;
+  font-size: 0.85em;
+  font-style: italic;
+  margin-top: 10px;
+}
+
+/* Remove all remaining animations */

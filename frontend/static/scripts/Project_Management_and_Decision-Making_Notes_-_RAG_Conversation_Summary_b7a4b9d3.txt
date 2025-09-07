@@ -1,0 +1,5 @@
+Hello everyone! Today, we'll be summarizing notes related to project management, supply chain modeling, and decision-making. This collection of information focuses on optimizing project activities, understanding critical paths, and employing effective data collection techniques.
+
+Specifically, we examined Production Management, or PM. It's crucial to understand that PM isn't about inventing new products. Instead, it focuses on efficiently producing already-designed goods. This involves forecasting demand, designing the supply chain, planning production, and verifying the production line. The entire goal is to maximize efficiency at every stage.
+
+Finally, we looked at decision-making within this context. Decisions are framed as binary choices: either take action (represented by 1) or don't (represented by 0). These decisions encompass project selection, activity scheduling, resource allocation, and even determining the flow of resources within the supply chain. Understanding these factors is vital for effective project execution and supply chain optimization.
