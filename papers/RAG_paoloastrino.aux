@@ -1,0 +1,122 @@
+\relax 
+\bibstyle{acl_natbib}
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{localragrepo}
+\citation{lewis2020rag}
+\citation{edpb,privacyinternational}
+\citation{arxiv2410,arxiv24102}
+\citation{hybridretrieval}
+\citation{lewis2020rag}
+\citation{arxiv24102}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{1}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Retrieval-Augmented Generation}{1}{subsection.2.1}\protected@file@percent }
+\citation{sentencetransformers,bgeembeddings}
+\citation{hybridretrieval}
+\citation{hybridretrieval}
+\citation{hallucination_survey}
+\citation{llm_judge}
+\citation{privacyinternational,edpb}
+\citation{anthropicmcp}
+\citation{hybridretrieval}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Hybrid Retrieval Strategies}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Hallucination Detection in RAG}{2}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Enterprise AI Security}{2}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Method}{2}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}System Architecture}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Architecture: frontend UI, client API, and server (retrieval, RAG core, secure credentials) with isolated secrets and local processing.}}{2}{figure.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:architecture}{{1}{2}{Architecture: frontend UI, client API, and server (retrieval, RAG core, secure credentials) with isolated secrets and local processing}{figure.caption.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}Security Framework}{2}{subsubsection.3.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.2}Communication Protocol}{2}{subsubsection.3.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Hybrid Retrieval Strategy}{2}{subsection.3.2}\protected@file@percent }
+\citation{bgeembeddings}
+\citation{langchainjs}
+\citation{hybridretrieval}
+\citation{langchainjs}
+\citation{langchainjs}
+\citation{pytorchcuda}
+\citation{squad}
+\citation{msmarco}
+\citation{naturalquestions}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Document Processing Pipeline}{3}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}GPU Acceleration}{3}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Experimental Setup}{3}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Datasets and Methodology}{3}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Evaluation Metrics}{3}{subsection.4.2}\protected@file@percent }
+\newlabel{subsec:eval-metrics}{{4.2}{3}{Evaluation Metrics}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Hallucination Evaluation Protocol}{3}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Results}{4}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Hybrid Weight Optimization}{4}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Ablation: Single-Method vs Hybrid Retrieval}{4}{subsection.5.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Ablation of retrieval strategies (Sparse = BM25, Dense = embeddings, Hybrid = 30/70). NQ = Natural Questions; single-method NQ baselines omitted due to resource limits. MeanRk nearly identical for MS MARCO sparse/dense (early-rank ties).}}{4}{table.caption.2}\protected@file@percent }
+\newlabel{tab:ablation}{{1}{4}{Ablation of retrieval strategies (Sparse = BM25, Dense = embeddings, Hybrid = 30/70). NQ = Natural Questions; single-method NQ baselines omitted due to resource limits. MeanRk nearly identical for MS MARCO sparse/dense (early-rank ties)}{table.caption.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Statistical Reliability and Confidence Intervals}{4}{subsection.5.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Point estimates with 95\% CIs (1{,}000 bootstrap resamples). Hallucination for NQ pending.}}{4}{table.caption.3}\protected@file@percent }
+\newlabel{tab:confidence}{{2}{4}{Point estimates with 95\% CIs (1{,}000 bootstrap resamples). Hallucination for NQ pending}{table.caption.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Overall Performance}{4}{subsection.5.4}\protected@file@percent }
+\citation{llm_judge,hallucination_survey}
+\citation{hallucination_survey}
+\citation{msmarco}
+\citation{pytorchcuda,johnson2019faiss}
+\newlabel{fig:hallucination_analysis}{{2a}{5}{Aggregate rates and means}{figure.caption.6}{}}
+\newlabel{sub@fig:hallucination_analysis}{{a}{5}{Aggregate rates and means}{figure.caption.6}{}}
+\newlabel{fig:confidence_analysis}{{2b}{5}{Score distributions}{figure.caption.6}{}}
+\newlabel{sub@fig:confidence_analysis}{{b}{5}{Score distributions}{figure.caption.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Reliability metrics: (a) low hallucination with high faithfulness/confidence; (b) distributions concentrated at 5 with modest degradation on MS MARCO.}}{5}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:reliability_overview}{{2}{5}{Reliability metrics: (a) low hallucination with high faithfulness/confidence; (b) distributions concentrated at 5 with modest degradation on MS MARCO}{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Reliability Assessment}{5}{subsection.5.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Optimal hybrid configuration performance (30\% sparse / 70\% dense).}}{5}{table.caption.4}\protected@file@percent }
+\newlabel{tab:results}{{3}{5}{Optimal hybrid configuration performance (30\% sparse / 70\% dense)}{table.caption.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Analysis}{5}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Hybrid Weight Optimization}{5}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}System Strengths}{5}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Scalability Characteristics}{5}{subsection.6.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Hallucination metrics (n=500 judged queries per dataset). Natural Questions pending.}}{5}{table.caption.5}\protected@file@percent }
+\newlabel{tab:hallucination}{{4}{5}{Hallucination metrics (n=500 judged queries per dataset). Natural Questions pending}{table.caption.5}{}}
+\citation{pytorchcuda}
+\citation{llm_judge}
+\newlabel{fig:hybrid_squad}{{3a}{6}{SQuAD: Stable until >50\% sparse}{figure.caption.7}{}}
+\newlabel{sub@fig:hybrid_squad}{{a}{6}{SQuAD: Stable until >50\% sparse}{figure.caption.7}{}}
+\newlabel{fig:hybrid_msmarco}{{3b}{6}{MS MARCO: High sparsity sensitivity}{figure.caption.7}{}}
+\newlabel{sub@fig:hybrid_msmarco}{{b}{6}{MS MARCO: High sparsity sensitivity}{figure.caption.7}{}}
+\newlabel{fig:hybrid_nq}{{3c}{6}{Natural Questions: Balanced optimum}{figure.caption.7}{}}
+\newlabel{sub@fig:hybrid_nq}{{c}{6}{Natural Questions: Balanced optimum}{figure.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Hybrid weight sensitivity across datasets. Each panel summarizes retrieval quality vs sparse weight (10\%--100\%): composite plots include MRR, Recall@K, answer coverage, and rank / degradation curves. The 30\% sparse / 70\% dense configuration achieves near-optimal balance across all datasets; increasing sparsity causes sharp degradation for MS MARCO, gradual decline for SQuAD, and modest impact for Natural Questions.}}{6}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:hybrid_performance}{{3}{6}{Hybrid weight sensitivity across datasets. Each panel summarizes retrieval quality vs sparse weight (10\%--100\%): composite plots include MRR, Recall@K, answer coverage, and rank / degradation curves. The 30\% sparse / 70\% dense configuration achieves near-optimal balance across all datasets; increasing sparsity causes sharp degradation for MS MARCO, gradual decline for SQuAD, and modest impact for Natural Questions}{figure.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Benchmark positioning: top three hybrid weights vs tier bands (MS MARCO normalized, SQuAD absolute). Chosen 30/70 mix sits solidly in Competitive while retaining acceptable MS MARCO performance.}}{6}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:industry_benchmark}{{4}{6}{Benchmark positioning: top three hybrid weights vs tier bands (MS MARCO normalized, SQuAD absolute). Chosen 30/70 mix sits solidly in Competitive while retaining acceptable MS MARCO performance}{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Cost-Effectiveness Analysis}{6}{subsection.6.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}System Environment and Resources}{6}{subsection.6.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion}{6}{section.7}\protected@file@percent }
+\citation{llm_judge}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Execution Environment and Runtime Characteristics. Latencies are median unless noted. Throughput measured on hybrid retrieval ($k=10$).}}{7}{table.caption.9}\protected@file@percent }
+\newlabel{tab:environment}{{5}{7}{Execution Environment and Runtime Characteristics. Latencies are median unless noted. Throughput measured on hybrid retrieval ($k=10$)}{table.caption.9}{}}
+\newlabel{sec:ethics}{{7}{7}{Ethics Statement}{section*.11}{}}
+\citation{privacyinternational,edpb}
+\bibdata{references}
+\bibcite{anthropicmcp}{{1}{2024}{{Anthropic}}{{}}}
+\bibcite{localragrepo}{{2}{2025}{{Astrino}}{{}}}
+\bibcite{bgeembeddings}{{3}{2024}{{BAAI}}{{}}}
+\bibcite{msmarco}{{4}{2016}{{Bajaj et~al.}}{{Bajaj, Campos, Craswell, Deng, Gao, Liu, Majumder, McNamara, Mitra, Nguyen, Rosenberg, Song, Stoica, Tiwary, and Wang}}}
+\bibcite{edpb}{{5}{2025}{{European Data Protection Board}}{{}}}
+\bibcite{johnson2019faiss}{{6}{2019}{{Johnson et~al.}}{{Johnson, Douze, and Jégou}}}
+\bibcite{naturalquestions}{{7}{2019}{{Kwiatkowski et~al.}}{{Kwiatkowski, Palomaki, Redfield, Collins, Parikh, Alberti, Epstein, Polosukhin, Devlin, Lee, Toutanova, Jones, Kelcey, Chang, Dai, Uszkoreit, Le, and Petrov}}}
+\bibcite{langchainjs}{{8}{2025}{{LangChain.js}}{{}}}
+\bibcite{lewis2020rag}{{9}{2020}{{Lewis et~al.}}{{Lewis, Perez, Piktus, Petroni, Karpukhin, Goyal, Küttler, Lewis, Yih, Rocktäschel, Riedel, and Kiela}}}
+\bibcite{arxiv24102}{{10}{2024}{{Lin et~al.}}{{}}}
+\bibcite{privacyinternational}{{11}{2024}{{Privacy International}}{{}}}
+\bibcite{pytorchcuda}{{12}{2025}{{PyTorch}}{{}}}
+\bibcite{squad}{{13}{2016}{{Rajpurkar et~al.}}{{Rajpurkar, Zhang, Lopyrev, and Liang}}}
+\bibcite{sentencetransformers}{{14}{2019}{{Reimers and Gurevych}}{{}}}
+\bibcite{hybridretrieval}{{15}{2024{a}}{{Wang et~al.}}{{Wang, Wang, Wang et~al.}}}
+\bibcite{arxiv2410}{{16}{2024{b}}{{Wang et~al.}}{{}}}
+\bibcite{hallucination_survey}{{17}{2023}{{Zhang et~al.}}{{Zhang, Zhang, Wang et~al.}}}
+\bibcite{llm_judge}{{18}{2023}{{Zheng et~al.}}{{Zheng, Chiang, Sheng et~al.}}}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Implementation Details}{9}{appendix.A}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Threat Model and Privacy Considerations}{9}{subsection.A.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Reproducibility and Artifact Availability}{9}{subsection.A.2}\protected@file@percent }
+\citation{localragrepo}
+\gdef \@abspage@last{10}
