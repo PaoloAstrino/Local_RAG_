@@ -3,3 +3,5 @@ __pycache__/
 logs/
 *.log
 evaluation/results/private_data/
+embed_cache/
+uploads/

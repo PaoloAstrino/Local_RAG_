@@ -122,7 +122,7 @@ def communicate_via_socket(command: dict) -> dict:
         
         logger.info(f"Attempting socket connection to {HOST}:{PORT}...")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(60)
+            s.settimeout(300)  # Increased from 60 to 300 seconds to match server timeout
             logger.info(f"Connecting to {HOST}:{PORT}...")
             s.connect((HOST, PORT))
             logger.info(f"Connected successfully to {HOST}:{PORT}")

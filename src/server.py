@@ -342,8 +342,11 @@ def handle_upload_command(cmd: Dict[str, Any]) -> Dict[str, Any]:
     valid_file_paths = [os.path.join(UPLOAD_FOLDER, fname) for fname in valid_files_info]
     file_names = valid_files_info # Use the validated names
 
-    logger.info(f"Attempting to initialize QA system with {len(valid_file_paths)} valid files...")
+    logger.info(f"Starting QA system initialization with {len(valid_file_paths)} valid files...")
+    start_time = time.time()
     success = initialize_qa_system(valid_file_paths) # Pass full paths
+    end_time = time.time()
+    logger.info(f"QA system initialization completed in {end_time - start_time:.2f} seconds, success: {success}")
 
     if success:
         uploaded_files = file_names # Store only basenames
