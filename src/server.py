@@ -272,7 +272,7 @@ def load_db(file_paths, k=5):
     # Weights determine the contribution of each retriever's scores.
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, semantic_retriever],
-        weights=[0.4, 0.6] # Example: 40% BM25, 60% Semantic
+        weights=[0.3, 0.7]  # Adjusted weights
     )
     logger.debug("Ensemble Retriever initialized.")
 
