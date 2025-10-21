@@ -1,8 +1,13 @@
-// MPC Chatbot Client Script
-// Handles file upload, chat, stop generation, and download chat history for app_MPC.py
+// RAG Chatbot Client Script
+// Handles file upload, chat, stop generation, and download chat history
 
 let currentRequest = null;
 
+/**
+ * Displays a message in the chat area with appropriate styling based on sender
+ * @param {string} sender - The sender of the message ("You", "Assistant", or "System")
+ * @param {string} message - The message content to display
+ */
 function showMessage(sender, message) {
   const chatArea = document.getElementById("chat-area");
   const senderClass =
@@ -15,6 +20,10 @@ function showMessage(sender, message) {
   chatArea.scrollTop = chatArea.scrollHeight;
 }
 
+/**
+ * Updates the file list display in the UI
+ * @param {Array<string>} fileNames - Array of uploaded file names
+ */
 function updateFileList(fileNames) {
   let fileListContainer = document.getElementById("file-list-container");
   if (!fileListContainer) {
@@ -34,8 +43,10 @@ function updateFileList(fileNames) {
   });
 }
 
-// Function to update the displayed file list (assuming it exists)
-// If you have a different function name or mechanism, adapt this part.
+/**
+ * Updates the file list UI elements with the provided files
+ * @param {Array<string>} files - Array of file names to display
+ */
 function updateFileListUI(files) {
   const fileListElement = document.getElementById("file-list"); // Assuming you have an element with id="file-list"
   if (fileListElement) {
@@ -62,10 +73,12 @@ function updateFileListUI(files) {
   }
 }
 
-// Function to fetch and update the file list from the server
+/**
+ * Fetches the current file list from the server and updates the UI
+ */
 async function fetchAndUpdateFileList() {
   try {
-    const response = await fetch("/mpc_get_files");
+    const response = await fetch("/rag_get_files");
     const data = await response.json();
     if (data.status === "success" && data.files) {
       updateFileListUI(data.files);
@@ -82,6 +95,9 @@ async function fetchAndUpdateFileList() {
 // Call this on page load to initialize the file list
 document.addEventListener("DOMContentLoaded", fetchAndUpdateFileList);
 
+/**
+ * Handles file upload process including validation, UI feedback, and server communication
+ */
 function uploadFiles() {
   const fileInput = document.getElementById("file-upload");
   const files = fileInput.files;
@@ -104,7 +120,7 @@ function uploadFiles() {
     formData.append("files", files[i]);
   }
   // For local protocol, use fetch to /upload if running a local server, or use a custom bridge
-  fetch("/mpc_upload", {
+  fetch("/rag_upload", {
     method: "POST",
     body: formData,
   })
@@ -154,7 +170,7 @@ document.addEventListener("DOMContentLoaded", function () {
       fileSelection.textContent = "No file chosen";
     }
   });
-  fetch("/mpc_get_files")
+  fetch("/rag_get_files")
     .then((response) => response.json())
     .then((data) => {
       if (data.files && data.files.length > 0) {
@@ -164,6 +180,9 @@ document.addEventListener("DOMContentLoaded", function () {
     .catch((error) => {});
 });
 
+/**
+ * Sends a message to the Assistant and handles the response
+ */
 function sendMessage() {
   const userInput = document.getElementById("user-input").value;
   if (userInput.trim() === "") return;
@@ -177,7 +196,7 @@ function sendMessage() {
   stopButton.disabled = false;
   const controller = new AbortController();
   currentRequest = controller;
-  fetch("/mpc_ask", {
+  fetch("/rag_ask", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question: userInput }),
@@ -208,11 +227,14 @@ function sendMessage() {
   document.getElementById("user-input").value = "";
 }
 
+/**
+ * Stops the current response generation process
+ */
 function stopGeneration() {
   if (currentRequest) {
     currentRequest.abort();
     currentRequest = null;
-    fetch("/mpc_stop_generation", {
+    fetch("/rag_stop_generation", {
       method: "POST",
     })
       .then((response) => response.json())
@@ -229,18 +251,21 @@ function stopGeneration() {
   }
 }
 
+/**
+ * Downloads the chat history as a text file
+ */
 function downloadChat() {
   const downloadButton = document.getElementById("download-chat");
   const originalText = downloadButton.textContent;
   downloadButton.textContent = "Preparing...";
   downloadButton.disabled = true;
-  fetch("/mpc_get_chat_history")
+  fetch("/rag_get_chat_history")
     .then((response) => response.json())
     .then((data) => {
       const currentDate = new Date();
       const formattedDate = currentDate.toLocaleString();
       let chatContent = "Chat History - " + formattedDate + "\n";
-      chatContent += "MPC Project - Document Chatbot\n\n";
+      chatContent += "RAG Chatbot - Document Chat\n\n";
       if (data.chat_history && data.chat_history.length > 0) {
         data.chat_history.forEach((item, index) => {
           const question = item[0];
@@ -282,7 +307,7 @@ function downloadChat() {
       const a = document.createElement("a");
       a.href = url;
       a.download =
-        "mpc_chat_history_" + currentDate.toISOString().slice(0, 10) + ".txt";
+        "rag_chat_history_" + currentDate.toISOString().slice(0, 10) + ".txt";
       document.body.appendChild(a);
       a.click();
       setTimeout(() => {
@@ -302,10 +327,13 @@ function downloadChat() {
     });
 }
 
+/**
+ * Resets the system state and clears chat and file history
+ */
 async function resetSystem() {
   displayMessage("Resetting system...", "system");
   try {
-    const response = await fetch("/mpc_reset", {
+    const response = await fetch("/rag_reset", {
       method: "POST",
     });
     const data = await response.json();
@@ -323,14 +351,20 @@ async function resetSystem() {
   }
 }
 
+/**
+ * Fetches and displays the current status of the system
+ */
 function getStatus() {
-  fetch("/mpc_get_status")
+  fetch("/rag_get_status")
     .then((res) => res.json())
     .then((data) => showMessage("System", JSON.stringify(data, null, 2)));
 }
 
+/**
+ * Fetches and displays the supported file types
+ */
 function getSupportedFileTypes() {
-  fetch("/mpc_get_supported_file_types")
+  fetch("/rag_get_supported_file_types")
     .then((res) => res.json())
     .then((data) =>
       showMessage(
@@ -340,6 +374,9 @@ function getSupportedFileTypes() {
     );
 }
 
+/**
+ * Deletes a file from the server and updates the file list
+ */
 async function deleteFile() {
   const filename = document.getElementById("filename-action").value;
   if (!filename) {
@@ -348,7 +385,7 @@ async function deleteFile() {
   }
   displayMessage(`Attempting to delete ${filename}...`, "system");
   try {
-    const response = await fetch("/mpc_delete_file", {
+    const response = await fetch("/rag_delete_file", {
       // Assuming endpoint exists
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -366,6 +403,9 @@ async function deleteFile() {
   }
 }
 
+/**
+ * Updates or re-indexes a file on the server
+ */
 async function updateFile() {
   const filename = document.getElementById("filename-action").value;
   if (!filename) {
@@ -374,7 +414,7 @@ async function updateFile() {
   }
   displayMessage(`Attempting to update/re-index ${filename}...`, "system");
   try {
-    const response = await fetch("/mpc_update_file", {
+    const response = await fetch("/rag_update_file", {
       // Assuming endpoint exists
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -395,10 +435,13 @@ async function updateFile() {
   }
 }
 
+/**
+ * Fetches and displays the content of a specified document
+ */
 function getDocumentContent() {
   const filename = document.getElementById("filename-action").value;
   if (!filename) return showMessage("System", "Enter a filename.");
-  fetch("/mpc_get_document_content", {
+  fetch("/rag_get_document_content", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ filename }),
@@ -420,93 +463,116 @@ function getDocumentContent() {
 
 // Helper function to get chat history from the DOM
 function getChatHistoryFromDOM() {
-    console.log("getChatHistoryFromDOM called");
-    const chatArea = document.getElementById("chat-area");
-    const messages = chatArea.getElementsByClassName("message");
-    const history = [];
-    let currentQuestion = null;
-    console.log(`Found ${messages.length} messages.`);
+  console.log("getChatHistoryFromDOM called");
+  const chatArea = document.getElementById("chat-area");
+  const messages = chatArea.getElementsByClassName("message");
+  const history = [];
+  let currentQuestion = null;
+  console.log(`Found ${messages.length} messages.`);
 
-    for (let i = 0; i < messages.length; i++) {
-        const message = messages[i];
-        const isYou = message.classList.contains("you-message");
-        const isAssistant = message.classList.contains("assistant-message");
-        
-        const strongTag = message.querySelector('strong');
-        if (!strongTag) {
-            console.warn("Message element without strong tag found, skipping:", message);
-            continue; // Skip if message format is unexpected
-        }
+  for (let i = 0; i < messages.length; i++) {
+    const message = messages[i];
+    const isYou = message.classList.contains("you-message");
+    const isAssistant = message.classList.contains("assistant-message");
 
-        const textContent = message.textContent.replace(strongTag.innerText, '').trim();
-        console.log(`Processing message ${i}: Sender: ${strongTag.innerText}, Content: '${textContent}'`);
-
-        if (isYou) {
-            currentQuestion = textContent;
-            console.log(`Stored question: ${currentQuestion}`);
-        } else if (isAssistant && currentQuestion) {
-            history.push([currentQuestion, textContent, []]);
-            console.log(`Pushed to history: ["${currentQuestion}", "${textContent}"]`);
-            currentQuestion = null; // Reset for the next Q&A pair
-        }
+    const strongTag = message.querySelector("strong");
+    if (!strongTag) {
+      console.warn(
+        "Message element without strong tag found, skipping:",
+        message
+      );
+      continue; // Skip if message format is unexpected
     }
-    console.log("Final history object:", history);
-    return history;
+
+    const textContent = message.textContent
+      .replace(strongTag.innerText, "")
+      .trim();
+    console.log(
+      `Processing message ${i}: Sender: ${strongTag.innerText}, Content: '${textContent}'`
+    );
+
+    if (isYou) {
+      currentQuestion = textContent;
+      console.log(`Stored question: ${currentQuestion}`);
+    } else if (isAssistant && currentQuestion) {
+      history.push([currentQuestion, textContent, []]);
+      console.log(
+        `Pushed to history: ["${currentQuestion}", "${textContent}"]`
+      );
+      currentQuestion = null; // Reset for the next Q&A pair
+    }
+  }
+  console.log("Final history object:", history);
+  return history;
 }
 
 // 1. Request video generation (topic analysis)
 async function requestVideoGeneration() {
-    const scriptButton = document.getElementById("generate-script");
-    scriptButton.disabled = true;
-    scriptButton.textContent = "Analyzing...";
+  const scriptButton = document.getElementById("generate-script");
+  scriptButton.disabled = true;
+  scriptButton.textContent = "Analyzing...";
 
-    const chatHistory = getChatHistoryFromDOM();
+  const chatHistory = getChatHistoryFromDOM();
 
-    if (chatHistory.length === 0) {
-        showMessage("System", "No conversation history to generate a script from.");
-        scriptButton.disabled = false;
-        scriptButton.textContent = "Generate Script";
-        return;
+  if (chatHistory.length === 0) {
+    showMessage("System", "No conversation history to generate a script from.");
+    scriptButton.disabled = false;
+    scriptButton.textContent = "Generate Script";
+    return;
+  }
+
+  try {
+    const response = await fetch("/rag_request_video_generation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_history: chatHistory }),
+    });
+    const data = await response.json();
+
+    if (
+      data.status === "success" &&
+      data.message === "video_confirmation_requested"
+    ) {
+      showVideoConfirmationDialog(
+        data.confirmation_question,
+        data.suggested_topic,
+        chatHistory
+      );
+    } else {
+      showMessage(
+        "System",
+        data.message || "Could not start video generation process."
+      );
     }
-
-    try {
-        const response = await fetch("/mpc_request_video_generation", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_history: chatHistory }),
-        });
-        const data = await response.json();
-
-        if (data.status === "success" && data.message === "video_confirmation_requested") {
-            showVideoConfirmationDialog(data.confirmation_question, data.suggested_topic, chatHistory);
-        } else {
-            showMessage("System", data.message || "Could not start video generation process.");
-        }
-    } catch (error) {
-        showMessage("System", "Error requesting video generation: " + error);
-    } finally {
-        scriptButton.disabled = false;
-        scriptButton.textContent = "Generate Script";
-    }
+  } catch (error) {
+    showMessage("System", "Error requesting video generation: " + error);
+  } finally {
+    scriptButton.disabled = false;
+    scriptButton.textContent = "Generate Script";
+  }
 }
 
 // 2. Show confirmation dialog
-function showVideoConfirmationDialog(confirmationQuestion, suggestedTopic, chatHistory) {
-    const modal = document.createElement("div");
-    modal.id = "script-confirmation-modal";
-    modal.style.cssText = `
+function showVideoConfirmationDialog(
+  confirmationQuestion,
+  suggestedTopic,
+  chatHistory
+) {
+  const modal = document.createElement("div");
+  modal.id = "script-confirmation-modal";
+  modal.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background-color: rgba(0, 0, 0, 0.7); display: flex;
         justify-content: center; align-items: center; z-index: 1000;
     `;
 
-    const modalContent = document.createElement("div");
-    modalContent.style.cssText = `
+  const modalContent = document.createElement("div");
+  modalContent.style.cssText = `
         background-color: #2a2a2a; color: #f5f5f5; padding: 20px;
         border-radius: 8px; max-width: 500px; text-align: center; border: 1px solid #444;
     `;
 
-    modalContent.innerHTML = `
+  modalContent.innerHTML = `
         <h3>Script Generation Confirmation</h3>
         <p>${confirmationQuestion}</p>
         <input type="text" id="custom-topic-input" placeholder="Or enter a different topic here" style="width: 80%; padding: 8px; margin-top: 10px;"/>
@@ -527,80 +593,92 @@ function showVideoConfirmationDialog(confirmationQuestion, suggestedTopic, chatH
         </div>
     `;
 
-    modal.appendChild(modalContent);
-    document.body.appendChild(modal);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
 
-    document.getElementById("confirm-yes-btn").onclick = () => {
-        const customTopic = document.getElementById("custom-topic-input").value;
-        const selectedLength = document.querySelector('input[name="script-length"]:checked').value;
-        confirmVideoGeneration(suggestedTopic, customTopic, chatHistory, selectedLength);
-    };
+  document.getElementById("confirm-yes-btn").onclick = () => {
+    const customTopic = document.getElementById("custom-topic-input").value;
+    const selectedLength = document.querySelector(
+      'input[name="script-length"]:checked'
+    ).value;
+    confirmVideoGeneration(
+      suggestedTopic,
+      customTopic,
+      chatHistory,
+      selectedLength
+    );
+  };
 }
 
 // 3. Confirm and start generation
-async function confirmVideoGeneration(suggestedTopic, customTopic, chatHistory, selectedLength) {
-    const modal = document.getElementById("script-confirmation-modal");
-    if (modal) modal.remove();
+async function confirmVideoGeneration(
+  suggestedTopic,
+  customTopic,
+  chatHistory,
+  selectedLength
+) {
+  const modal = document.getElementById("script-confirmation-modal");
+  if (modal) modal.remove();
 
-    showMessage("System", "Script generation confirmed. Starting process...");
-    showMessage("System", "Generating script from conversation history..."); // Added message
-    const progressDiv = document.createElement("div");
-    progressDiv.id = "script-progress";
-    progressDiv.innerHTML = "<p>Generating script... (This may take a moment)</p>";
-    document.getElementById("chat-area").appendChild(progressDiv);
+  showMessage("System", "Script generation confirmed. Starting process...");
+  showMessage("System", "Generating script from conversation history..."); // Added message
+  const progressDiv = document.createElement("div");
+  progressDiv.id = "script-progress";
+  progressDiv.innerHTML =
+    "<p>Generating script... (This may take a moment)</p>";
+  document.getElementById("chat-area").appendChild(progressDiv);
 
-    try {
-        const response = await fetch("/mpc_confirm_video_generation", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                response: "yes",
-                custom_topic: customTopic,
-                suggested_topic: suggestedTopic,
-                chat_history: chatHistory,
-                script_length: selectedLength,
-            }),
-        });
-        const data = await response.json();
+  try {
+    const response = await fetch("/rag_confirm_video_generation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        response: "yes",
+        custom_topic: customTopic,
+        suggested_topic: suggestedTopic,
+        chat_history: chatHistory,
+        script_length: selectedLength,
+      }),
+    });
+    const data = await response.json();
 
-        if (progressDiv) progressDiv.remove();
+    if (progressDiv) progressDiv.remove();
 
-        if (data.status === "success" && data.script) {
-            const fullScript = data.script.script;
-            const maxLength = 500; // Maximum characters to display
-            let displayedScript = fullScript;
-            let downloadLinkHtml = '';
+    if (data.status === "success" && data.script) {
+      const fullScript = data.script.script;
+      const maxLength = 500; // Maximum characters to display
+      let displayedScript = fullScript;
+      let downloadLinkHtml = "";
 
-            if (fullScript.length > maxLength) {
-                displayedScript = fullScript.substring(0, maxLength) + '...';
-            }
+      if (fullScript.length > maxLength) {
+        displayedScript = fullScript.substring(0, maxLength) + "...";
+      }
 
-            let scriptHtml = `<strong>Script for topic: ${data.topic}</strong><br><pre>${displayedScript}</pre>`;
-            
-            if (data.script.filename) {
-                downloadLinkHtml = `<br><a class="download-script-link" href="/download_script/${data.script.filename}" download>Download Full Script</a>`;
-            }
-            
-            showMessage("System", scriptHtml + downloadLinkHtml);
-        } else {
-            showMessage("System", data.message || "Failed to generate script.");
-        }
-    } catch (error) {
-        if (progressDiv) progressDiv.remove();
-        showMessage("System", "Error during script generation: " + error);
+      let scriptHtml = `<strong>Script for topic: ${data.topic}</strong><br><pre>${displayedScript}</pre>`;
+
+      if (data.script.filename) {
+        downloadLinkHtml = `<br><a class="download-script-link" href="/download_script/${data.script.filename}" download>Download Full Script</a>`;
+      }
+
+      showMessage("System", scriptHtml + downloadLinkHtml);
+    } else {
+      showMessage("System", data.message || "Failed to generate script.");
     }
+  } catch (error) {
+    if (progressDiv) progressDiv.remove();
+    showMessage("System", "Error during script generation: " + error);
+  }
 }
 
 function cancelVideoGeneration() {
-    const modal = document.getElementById("script-confirmation-modal");
-    if (modal) modal.remove();
-    showMessage("System", "Script generation cancelled.");
+  const modal = document.getElementById("script-confirmation-modal");
+  if (modal) modal.remove();
+  showMessage("System", "Script generation cancelled.");
 }
-
 
 // This function is now a wrapper for the new workflow
 function generateScript() {
-    requestVideoGeneration();
+  requestVideoGeneration();
 }
 
 // Add CSS for the spinning animation
