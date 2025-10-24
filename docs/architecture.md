@@ -59,59 +59,93 @@ class HybridRetriever:
 
 #### Dense Retrieval (Embeddings)
 
-- **Model**: Sentence Transformers (`all-MiniLM-L6-v2`)
-- **Library**: FAISS for similarity search
+- **Model**: BGE (`BAAI/bge-base-en-v1.5`)
+- **Library**: DocArrayInMemorySearch for vector storage, HuggingFace for embeddings
 - **Features**:
-  - Semantic similarity matching
-  - Contextual understanding
-  - Multi-lingual support (optional)
+  - Semantic similarity matching via cosine distance
+  - Contextual understanding through transformer embeddings
+  - Local caching in `embed_cache/` for performance
+  - GPU acceleration (4.2× speedup on RTX 4050)
 
 ### 2. Generation System
 
-#### Local Language Model
+#### Local Language Model (Ollama)
 
-- **Model**: DialoGPT or similar conversational model
-- **Framework**: Transformers library
+- **Platform**: Ollama for local LLM hosting
+- **Model**: Llama 3.2 (open-source, fully local)
+- **Endpoint**: `http://localhost:11434/api/generate`
 - **Features**:
-  - Context-aware response generation
-  - Temperature sampling for diversity
-  - Length control and truncation
+  - 100% local inference (no external API calls)
+  - Context-aware response generation with chat history
+  - Configurable temperature (0.6), top-p (0.95), top-k (40)
+  - GPU acceleration (3× speedup vs CPU)
+  - Complete data sovereignty
 
-#### Hallucination Detection
-
-- **Method**: LLM-as-Judge approach
-- **Implementation**: Custom Judge class
-- **Scoring**: 0.0 (no hallucination) to 1.0 (high hallucination)
+#### Prompt Engineering
 
 ```python
-class Judge:
-    def evaluate(self, answer, context, question):
-        # Compare answer with context
-        # Check factual consistency
-        # Return hallucination score
-        return score
+def get_prompt_template():
+    return """You are a helpful assistant. Based on the chat history
+    and the context provided, answer the user's current question
+    in a clear and natural way.
+
+    Chat History:
+    {chat_history}
+
+    Context:
+    {context}
+
+    Current Question: {question}
+
+    Answer:"""
 ```
 
-### 3. Web Interface
+#### Hallucination Detection (Evaluation Only)
 
-#### Frontend Architecture
+- **Method**: LLM-as-Judge approach using Gemini API
+- **Note**: Used only for offline evaluation, NOT in production
+- **Implementation**: Evaluates faithfulness (1-5), confidence (1-5)
+- **Metrics**: Binary hallucination flag, faithfulness score, confidence score
+
+### 3. Client-Server Architecture
+
+#### Server Component (`src/server.py`)
+
+- **Protocol**: TCP socket on port 65432
+- **Functions**:
+  - Document loading (PDF, CSV, JSON, TXT)
+  - Hybrid retrieval orchestration
+  - LLM inference via Ollama
+  - Chat history management
+- **Commands**:
+  - `upload`: Initialize retriever with documents
+  - `ask`: Query with retrieval and generation
+  - `get_files`: List uploaded documents
+  - `get_chat_history`: Retrieve conversation history
+  - `reset`: Clear all data
+  - `get_status`: System health check
+
+#### Client Component (`src/client.py`)
+
+- **Framework**: Flask HTTP API server (port 5001)
+- **Role**: Bridges web UI and server via sockets
+- **Endpoints**:
+  - `POST /rag_upload`: Document upload
+  - `POST /rag_ask`: Question answering
+  - `GET /rag_get_files`: List documents
+  - `GET /rag_get_chat_history`: Conversation history
+  - `POST /rag_reset`: System reset
+  - `GET /rag_get_status`: Status check
+
+#### Frontend (`frontend/chat.html`)
 
 - **Framework**: Vanilla JavaScript + HTML5
 - **Styling**: Custom CSS with responsive design
 - **Features**:
-  - Drag-and-drop file upload
-  - Real-time progress indicators
-  - Interactive parameter adjustment
-  - Results visualization
-
-#### Backend API
-
-- **Framework**: Flask web server
-- **Endpoints**:
-  - `POST /upload`: Document upload
-  - `POST /query`: Question answering
-  - `GET /status`: System status
-  - `GET /config`: Configuration retrieval
+  - File upload interface (PDF, CSV, JSON, TXT)
+  - Real-time question answering
+  - Chat history display
+  - Document management
 
 ### 4. Evaluation Framework
 
@@ -129,23 +163,40 @@ class Judge:
 
 ## Data Flow
 
-### Document Processing Pipeline
+### Document Processing Pipeline (100% Local)
 
 1. **Document Ingestion**
 
    ```
-   Raw Document → Text Extraction → Chunking → Indexing
+   Web Upload → Client (Flask) → Server (Socket) → Document Loaders
+   → Text Extraction → RecursiveCharacterTextSplitter (400/150)
+   → Chunks with Metadata
    ```
 
-2. **Query Processing**
+2. **Indexing (Hybrid)**
 
    ```
-   User Query → Preprocessing → Retrieval → Generation → Filtering → Response
+   Chunks → BGE Embeddings (GPU/CPU) → DocArrayInMemorySearch (Vector Store)
+        ↓
+   Chunks → BM25Retriever (Keyword Index)
+        ↓
+   EnsembleRetriever (30% BM25, 70% Semantic)
    ```
 
-3. **Evaluation Pipeline**
+3. **Query Processing (100% Local)**
+
    ```
-   Dataset → Prediction → Scoring → Bootstrap → Confidence Intervals
+   User Question → Client → Server → Hybrid Retrieval (top-5 chunks)
+   → Context Assembly → Prompt Template (history + context + question)
+   → Ollama/Llama 3.2 (Local LLM) → Answer
+   → Chat History Update → Client → Web UI
+   ```
+
+4. **Evaluation Pipeline (Offline)**
+   ```
+   Benchmark Dataset → Hybrid Retrieval → Metrics (MRR, Recall@K)
+   → Bootstrap Resampling (1000×) → 95% Confidence Intervals
+   → Hallucination Eval (Gemini API) → Faithfulness Scores
    ```
 
 ## Configuration Management

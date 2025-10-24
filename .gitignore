@@ -1,7 +1,51 @@
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+
+# Environment variables
 .env
+.env.local
+
+# Logs
 logs/
 *.log
+
+# Evaluation data
 evaluation/results/private_data/
+
+# Runtime data
 embed_cache/
 uploads/
+*.pkl
+*.cache
+
+# LaTeX build artifacts
+papers/*.aux
+papers/*.bbl
+papers/*.blg
+papers/*.fls
+papers/*.fdb_latexmk
+papers/*.out
+papers/*.synctex.gz
+papers/*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Personal files
+**/CV_*.pdf
+**/*_personal_*

@@ -1,0 +1,33 @@
+✅ DOCUMENTATION UPDATE COMPLETE
+
+Updated Files:
+==============
+1. docs/README.md          - Updated file paths, added 100% local emphasis, Ollama setup
+2. docs/installation.md    - Added Ollama prerequisites, updated Python 3.11+ requirement
+3. docs/usage.md           - Updated commands (server.py/client.py), socket API examples
+4. docs/api.md             - Completely rewritten for socket protocol & HTTP endpoints
+5. docs/architecture.md    - Updated models (BGE, Ollama/Llama 3.2), data flow diagrams
+6. docs/troubleshooting.md - Added Ollama troubleshooting, updated error solutions
+7. docs/contributing.md    - Updated repo URLs, Python 3.11+ requirement
+
+Key Changes:
+============
+✓ Removed references to non-existent folders (src/retrieval/, src/generation/, src/utils/)
+✓ Updated all file paths: server_MPC.py → server.py, client_MPC.py → client.py
+✓ Updated ports: 5000 → 5001 for client
+✓ Added Ollama/Llama 3.2 documentation throughout
+✓ Replaced generic embeddings (all-MiniLM-L6-v2) with BGE (BAAI/bge-base-en-v1.5)
+✓ Emphasized 100% local operation (zero external APIs in production)
+✓ Added socket communication protocol documentation
+✓ Updated optimal hybrid weights: 30% sparse, 70% dense
+✓ Added GPU acceleration notes (4.2× embeddings, 3× LLM)
+✓ Comprehensive troubleshooting for Ollama, embeddings, memory issues
+
+Documentation Status:
+====================
+✅ All docs now reflect the actual codebase
+✅ Consistent terminology and architecture references
+✅ Publication-ready for scientific paper attachment
+✅ No outdated API references
+✅ Clear setup instructions for reproduction
+

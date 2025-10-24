@@ -639,7 +639,7 @@ if __name__ == "__main__":
                 # Set socket timeout for the client connection
                 # Increased for long-running operations (e.g., file uploads with embeddings)
                 # Adjust based on your hardware/file sizes; 300 seconds = 5 minutes
-                conn.settimeout(300)  # Increased from 60 to 300 seconds
+                conn.settimeout(3000)  # Increased from 60 to 300 seconds
                 
                 client_thread = threading.Thread(target=handle_client, args=(conn, addr))
                 client_thread.daemon = True

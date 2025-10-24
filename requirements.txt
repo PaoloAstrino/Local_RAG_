@@ -1,29 +1,36 @@
- Enhanced RAG Evaluation System Requirements
-# Core dependencies for the enhanced hallucination evaluation system
+# Core dependencies
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-core>=0.1.0
+langchain-huggingface>=0.0.1
 
-# Data processing and analysis
-numpy>=1.21.0
-pandas>=1.3.0
+# LLM and Embeddings
+sentence-transformers>=2.0.0
+transformers>=4.20.0
+torch>=1.11.0
 
-# Visualization (optional, for metrics charts)
-matplotlib>=3.5.0
-seaborn>=0.11.0
+# Vector search
+faiss-cpu>=1.7.0
 
-# API and HTTP requests
-requests>=2.25.0
+# Document processing
+pypdf>=3.0.0
+python-docx>=0.8.11
 
-# Environment management
+# Web framework
+flask>=2.3.0
+flask-cors>=4.0.0
+
+# Utilities
 python-dotenv>=0.19.0
-
-# Progress bars
+requests>=2.28.0
+pandas>=1.3.0
+numpy>=1.21.0
 tqdm>=4.62.0
-
-# System monitoring
 psutil>=5.8.0
 
-# Existing dependencies (if not already installed)
-sentence-transformers>=2.0.0
+# Evaluation
+datasets>=2.0.0
 scikit-learn>=1.0.0
-torch>=1.11.0
-transformers>=4.20.0
-faiss-cpu>=1.7.0
+
+# JSON validation
+jsonschema>=4.0.0

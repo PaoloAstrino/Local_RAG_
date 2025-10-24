@@ -22,11 +22,23 @@ This guide will help you set up the Local Hybrid Retrieval-Augmented Document QA
 
 ### Python Environment
 
-1. **Download and install Python 3.8+** from [python.org](https://python.org)
+1. **Download and install Python 3.11+** from [python.org](https://python.org)
 2. **Verify installation**:
    ```bash
-   python --version
+   python --version  # Should be 3.11 or higher
    pip --version
+   ```
+
+### Ollama (Local LLM)
+
+1. **Download and install Ollama** from [ollama.com](https://ollama.com)
+2. **Pull the Llama 3.2 model**:
+   ```bash
+   ollama pull llama3.2
+   ```
+3. **Verify Ollama is running**:
+   ```bash
+   curl http://localhost:11434/api/tags
    ```
 
 ### Required Libraries

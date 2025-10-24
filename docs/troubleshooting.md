@@ -82,34 +82,73 @@ pip install faiss-cpu
 
 ### "CUDA out of memory"
 
-**Problem**: GPU memory insufficient for model loading.
+**Problem**: GPU memory insufficient for embedding generation.
 
 **Solutions**:
 
 ```python
-# In config.py or environment
-export CUDA_VISIBLE_DEVICES=""
-# Forces CPU usage
+# In src/server.py, force CPU usage
+_underlying_embeddings = HuggingFaceEmbeddings(
+    model_name="BAAI/bge-base-en-v1.5",
+    model_kwargs={'device': 'cpu'}  # Force CPU
+)
 
-# Or reduce model size
-config.EMBEDDING_MODEL = "all-MiniLM-L3-v2"  # Smaller model
-config.BATCH_SIZE = 4
+# Or reduce batch size for embeddings
+# Process fewer chunks at once
 ```
 
-### "Model not found" error
+### Ollama Connection Issues
 
-**Problem**: Model files not downloaded or corrupted.
+**Problem**: "Connection refused" when asking questions.
+
+**Solutions**:
+
+```bash
+# Check if Ollama is running
+curl http://localhost:11434/api/tags
+
+# Start Ollama if not running
+ollama serve
+
+# Verify Llama 3.2 model is installed
+ollama list
+ollama pull llama3.2  # If missing
+```
+
+### "Model not found" or embedding download error
+
+**Problem**: BGE embedding model not downloaded or corrupted.
 
 **Solution**:
 
 ```bash
-# Clear cache and re-download
-rm -rf ~/.cache/huggingface
-rm -rf ~/.cache/torch
+# Clear HuggingFace cache
+rm -rf ~/.cache/huggingface  # Linux/Mac
+# Windows: Delete C:\Users\<username>\.cache\huggingface
 
-# Set cache directory
-export TRANSFORMERS_CACHE=/path/to/cache
-python -c "from transformers import AutoModel; AutoModel.from_pretrained('microsoft/DialoGPT-small')"
+# Manual download test
+python -c "from langchain_huggingface import HuggingFaceEmbeddings; \
+           emb = HuggingFaceEmbeddings(model_name='BAAI/bge-base-en-v1.5')"
+
+# Check cache directory
+ls embed_cache/BAAI/  # Should contain cached embeddings
+```
+
+### Llama model missing in Ollama
+
+**Problem**: Ollama installed but Llama 3.2 not available.
+
+**Solution**:
+
+```bash
+# List available models
+ollama list
+
+# Pull Llama 3.2 if missing
+ollama pull llama3.2
+
+# Verify model works
+ollama run llama3.2 "Hello"  # Should respond
 ```
 
 ### "UnicodeDecodeError" with special characters
@@ -128,21 +167,32 @@ with open('document.txt', 'r', encoding='utf-8', errors='ignore') as f:
     text = f.read()
 ```
 
-### "Connection refused" when starting server
+### "Connection refused" or "Address already in use"
 
-**Problem**: Port already in use or firewall blocking.
+**Problem**: Server port (65432) or client port (5001) already in use.
 
 **Solutions**:
 
 ```bash
 # Check port usage
-netstat -ano | findstr :5000
+# Windows
+netstat -ano | findstr :65432
+netstat -ano | findstr :5001
+
+# Linux/Mac
+lsof -i :65432
+lsof -i :5001
 
 # Kill process using port
+# Windows
 taskkill /PID <PID> /F
 
-# Or use different port
-python src/server_MPC.py --port 5001
+# Linux/Mac
+kill -9 <PID>
+
+# Or modify ports in code
+# Server: src/server.py, line ~650, change PORT = 65432
+# Client: src/client.py, last line, change port=5001
 ```
 
 ## Performance Issues
@@ -168,22 +218,110 @@ export CUDA_VISIBLE_DEVICES=0
 
 ### High memory usage
 
-**Problem**: Memory leaks or large models.
+**Problem**: Embeddings and LLM consuming too much RAM.
 
 **Solutions**:
 
 ```python
-# Clear cache periodically
-import gc
-gc.collect()
+# Force CPU-only (reduces VRAM usage)
+# In src/server.py, get_embeddings function:
+model_kwargs={'device': 'cpu'}
 
-# Use smaller models
-config.EMBEDDING_MODEL = "paraphrase-MiniLM-L3-v2"
+# Reduce chunk batch size for embeddings
+# Process fewer documents at once
+
+# Use quantized Ollama models
+ollama pull llama3.2:7b-instruct-q4_0  # Quantized version
+
+# Monitor memory usage
+import psutil
+print(f"RAM: {psutil.virtual_memory().percent}%")
+```
+
+### Slow embedding generation
+
+**Problem**: CPU embedding too slow without GPU.
+
+**Solutions**:
+
+```python
+# Enable GPU if available
+import torch
+print(torch.cuda.is_available())  # Should be True
+
+# Verify GPU is being used
+# Check logs for: "Initializing embeddings... device: cuda"
+
+# If GPU available but not used, reinstall PyTorch with CUDA:
+pip uninstall torch
+pip install torch --index-url https://download.pytorch.org/whl/cu118
+```
+
+### Ollama inference timeout
+
+**Problem**: LLM generation takes too long or times out.
+
+**Solutions**:
+
+```python
+# Increase timeout in src/server.py, call_external_llm_api:
+response = requests.post(ollama_url, json=payload, headers=headers, timeout=120)  # Increase from 60
+
+# Use faster model
+ollama pull llama3.2:7b  # Instead of larger variants
+
+# Reduce max tokens
+"num_predict": 512  # Instead of 1024
+```
+
+### Empty or truncated responses
+
+**Problem**: Ollama returns incomplete answers.
+
+**Solutions**:
+
+```bash
+# Check Ollama logs
+ollama logs
+
+# Restart Ollama
+pkill ollama
+ollama serve
+
+# Verify context window
+# In src/server.py, increase num_predict:
+"num_predict": 2048  # Allow longer responses
+```
+
+### Web interface not loading
+
+**Problem**: Client not serving frontend correctly.
+
+**Solutions**:
+
+```bash
+# Verify client is running on port 5001
+curl http://localhost:5001
+
+# Check frontend files exist
+ls frontend/chat.html
+ls frontend/static/rag_script.js
+ls frontend/static/rag_styles.css
+
+# Check browser console (F12) for errors
+
+# Try accessing directly
+# Open: http://localhost:5001/static/rag_script.js
+# Should show JavaScript code, not 404
+```
+
 config.GENERATION_MODEL = "distilgpt2"
 
 # Reduce batch size
+
 config.BATCH_SIZE = 4
-```
+
+````
 
 ### Slow query response times
 
@@ -201,7 +339,7 @@ config.MAX_NEW_TOKENS = 50
 
 # Use faster models
 config.EMBEDDING_MODEL = "all-MiniLM-L6-v2"  # Faster than larger models
-```
+````
 
 ## Web Interface Issues
 

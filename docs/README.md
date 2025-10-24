@@ -4,11 +4,13 @@ This repository implements a privacy-preserving, hybrid retrieval-augmented gene
 
 ## Key Features
 
-- **Hybrid Retrieval**: Combines BM25 (sparse) and dense embeddings for optimal retrieval
-- **Hallucination Detection**: Uses LLM-as-Judge for filtering unreliable responses
-- **Privacy-Preserving**: Runs entirely locally with no external API dependencies
+- **100% Local Operation**: All processing (embeddings, retrieval, LLM inference) runs on-premises via Ollama/Llama 3.2
+- **Hybrid Retrieval**: Combines BM25 (sparse) and BGE embeddings (dense) for optimal retrieval
+- **Zero External Dependencies**: Complete data sovereignty with no cloud API calls
+- **Hallucination Detection**: LLM-as-Judge evaluation for reliability assessment
 - **Comprehensive Evaluation**: Tested on SQuAD, MS MARCO, and Natural Questions datasets
-- **Configurable Weights**: Fine-tune sparse/dense retrieval balance
+- **GPU Acceleration**: 4.2× speedup for embeddings, 3× for LLM inference
+- **Configurable Weights**: Fine-tune sparse/dense retrieval balance (optimal: 30/70)
 - **Bootstrap Evaluation**: Statistical confidence intervals for robust results
 
 ## Quick Start
@@ -32,22 +34,25 @@ This repository implements a privacy-preserving, hybrid retrieval-augmented gene
    python src/evaluation/run_weight_sweep.py
    ```
 
-4. **Start the web interface**
+4. **Start the system**
+
    ```bash
-   python src/server_MPC.py
+   # Terminal 1: Start the server
+   python src/server.py
+
+   # Terminal 2: Start the client
+   python src/client.py
    ```
-   Then open `http://localhost:5000` in your browser.
+
+   Then open `http://localhost:5001` in your browser.
 
 ## Project Structure
 
 ```
 ├── src/                    # Source code
-│   ├── client_MPC.py      # Client application
-│   ├── server_MPC.py      # Server application
-│   ├── config.py          # Configuration settings
-│   ├── retrieval/         # Retrieval components
-│   ├── generation/        # Generation components
-│   └── utils/             # Utility functions
+│   ├── client.py          # Flask HTTP API client
+│   ├── server.py          # Core RAG server (retrieval + LLM)
+│   └── config.py          # Configuration settings
 ├── frontend/              # Web interface
 │   ├── chat_MPC.html     # Main HTML interface
 │   └── static/           # CSS and JavaScript files

@@ -16,22 +16,24 @@ We welcome contributions to the Local Hybrid Retrieval-Augmented Document QA pro
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.11 or higher
 - Git
+- Ollama installed and running
 - Virtual environment tool (venv, conda, etc.)
 - Code editor (VS Code, PyCharm, etc.)
+- (Optional) CUDA-capable GPU for acceleration
 
 ### Fork and Clone
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork**:
    ```bash
-   git clone https://github.com/your-username/local-hybrid-rag-qa.git
-   cd local-hybrid-rag-qa
+   git clone https://github.com/your-username/Local_RAG.git
+   cd Local_RAG
    ```
 3. **Set up upstream remote**:
    ```bash
-   git remote add upstream https://github.com/original-owner/local-hybrid-rag-qa.git
+   git remote add upstream https://github.com/PaoloAstrino/Local_RAG.git
    ```
 
 ## Development Setup

@@ -15,26 +15,34 @@ This guide provides examples and instructions for using the Local Hybrid Retriev
 
 ### Web Interface
 
-1. **Start the server**:
+1. **Ensure Ollama is running**:
 
    ```bash
-   python src/server_MPC.py
+   ollama serve  # If not already running
    ```
 
-2. **Open your browser** to `http://localhost:5000`
+2. **Start the server** (Terminal 1):
 
-3. **Upload documents** and ask questions through the web interface
+   ```bash
+   python src/server.py
+   ```
+
+3. **Start the client** (Terminal 2):
+
+   ```bash
+   python src/client.py
+   ```
+
+4. **Open your browser** to `http://localhost:5001`
+
+5. **Upload documents** and ask questions through the web interface
 
 ### Command Line
 
 ```bash
-# Basic retrieval example
-python -c "
-from src.retrieval.hybrid_retriever import HybridRetriever
-retriever = HybridRetriever(sparse_weight=0.3, dense_weight=0.7)
-results = retriever.retrieve('What is machine learning?', corpus)
-print(results)
-"
+# The system is designed for web interface use
+# Direct Python API usage requires importing from src/server.py
+# See the web interface at http://localhost:5001 for full functionality
 ```
 
 ## Web Interface
@@ -55,96 +63,98 @@ print(results)
 
 ## Python API
 
-### Basic Retrieval
+### Using the Server Directly
+
+The system is designed as a client-server architecture. For programmatic access, you can interact with the server via socket commands:
 
 ```python
-from src.retrieval.hybrid_retriever import HybridRetriever
+import socket
+import json
 
-# Initialize retriever with custom weights
-retriever = HybridRetriever(
-    sparse_weight=0.4,
-    dense_weight=0.6,
-    embedding_model="all-MiniLM-L6-v2"
+def send_command(command_dict):
+    """Send command to RAG server"""
+    HOST = '127.0.0.1'
+    PORT = 65432
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        data = json.dumps(command_dict).encode('utf-8') + b'\n'
+        s.sendall(data)
+
+        response = b''
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            response += chunk
+            if response.endswith(b'\n'):
+                break
+
+        return json.loads(response.decode('utf-8'))
+
+# Upload files
+result = send_command({
+    "command": "upload",
+    "file_paths": ["uploads/document.pdf"]
+})
+
+# Ask question
+result = send_command({
+    "command": "ask",
+    "question": "What is the main topic of this document?"
+})
+print(result['answer'])
+```
+
+### Configuration
+
+The hybrid retriever weights can be adjusted in `src/server.py`:
+
+```python
+# In the load_db function, modify EnsembleRetriever weights:
+ensemble_retriever = EnsembleRetriever(
+    retrievers=[bm25_retriever, semantic_retriever],
+    weights=[0.3, 0.7]  # [sparse_weight, dense_weight]
 )
-
-# Prepare your corpus
-corpus = [
-    "Machine learning is a subset of artificial intelligence...",
-    "Deep learning uses neural networks with multiple layers...",
-    "Natural language processing handles human language..."
-]
-
-# Perform retrieval
-query = "What is deep learning?"
-results = retriever.retrieve(query, corpus, top_k=5)
-
-for i, result in enumerate(results):
-    print(f"{i+1}. {result['text']}")
-    print(f"   Score: {result['score']:.3f}")
-    print(f"   Sparse: {result['sparse_score']:.3f}")
-    print(f"   Dense: {result['dense_score']:.3f}")
-    print()
 ```
 
-### Hallucination Detection
-
-```python
-from src.generation.hallucination_judge import Judge
-
-# Initialize judge
-judge = Judge(model="local")  # or "api" for external models
-
-# Evaluate answer quality
-question = "What is the capital of France?"
-answer = "Paris is the capital of France."
-context = "France is a country in Europe. Its capital is Paris."
-
-score = judge.evaluate(answer, context, question)
-print(f"Hallucination Score: {score:.3f}")  # Lower is better
-print(f"Confident: {score < 0.3}")
-```
-
-### Custom Configuration
-
-```python
-from src.config import Config
-
-# Load default configuration
-config = Config()
-
-# Modify settings
-config.SPARSE_WEIGHT = 0.5
-config.DENSE_WEIGHT = 0.5
-config.BATCH_SIZE = 16
-config.MAX_LENGTH = 256
-
-# Save configuration
-config.save("my_config.json")
-```
+Optimal configuration (from paper): **30% sparse, 70% dense**
 
 ## Configuration
 
 ### Key Parameters
 
-#### Retrieval Settings
+#### Retrieval Settings (in `src/server.py`)
 
 ```python
-SPARSE_WEIGHT = 0.3          # Weight for BM25 (0.0 to 1.0)
-DENSE_WEIGHT = 0.7           # Weight for embeddings (0.0 to 1.0)
-TOP_K = 10                   # Number of results to return
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"  # Sentence transformer model
+# Hybrid retriever weights (optimal from paper)
+SPARSE_WEIGHT = 0.3          # Weight for BM25 (30%)
+DENSE_WEIGHT = 0.7           # Weight for dense embeddings (70%)
+TOP_K = 5                    # Number of documents to retrieve
+
+# Embedding model
+EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"  # HuggingFace embeddings
+
+# Document chunking
+CHUNK_SIZE = 400             # Characters per chunk
+CHUNK_OVERLAP = 150          # Overlap between chunks
 ```
 
-#### Generation Settings
+#### Generation Settings (Ollama)
 
 ```python
-GENERATION_MODEL = "microsoft/DialoGPT-small"  # Local model path
-MAX_NEW_TOKENS = 100         # Maximum response length
-TEMPERATURE = 0.7            # Response randomness (0.0 to 1.0)
-DO_SAMPLE = True             # Enable sampling
+# Local LLM via Ollama
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "llama3.2"           # Ollama model name
+
+# Generation parameters
+TEMPERATURE = 0.6            # Response randomness (0.0 to 2.0)
+TOP_P = 0.95                 # Nucleus sampling
+TOP_K = 40                   # Top-k sampling
+MAX_TOKENS = 1024            # Maximum response length
 ```
 
-#### Evaluation Settings
+#### Evaluation Settings (in `src/config.py`)
 
 ```python
 BOOTSTRAP_SAMPLES = 1000     # Bootstrap resampling iterations

@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Astrino"
+    given-names: "Paolo"
+    email: "paoloastrino01@gmail.com"
+    orcid: "https://orcid.org/0000-0000-0000-0000" # Update with your ORCID if available
+    affiliation: "Università Ca' Foscari Venezia"
+title: "Local Hybrid Retrieval-Augmented Document QA"
+version: 1.0.0
+date-released: 2025-10-24
+url: "https://github.com/PaoloAstrino/Local_RAG"
+repository-code: "https://github.com/PaoloAstrino/Local_RAG"
+keywords:
+  - retrieval-augmented-generation
+  - rag
+  - natural-language-processing
+  - document-qa
+  - hybrid-retrieval
+  - local-llm
+  - privacy-preserving
+  - ollama
+  - llama
+license: MIT
+preferred-citation:
+  type: thesis
+  authors:
+    - family-names: "Astrino"
+      given-names: "Paolo"
+  title: "Local Hybrid Retrieval-Augmented Document QA"
+  institution: "Università Ca' Foscari Venezia"
+  thesis-type: "Master's Thesis"
+  year: 2025

@@ -1,22 +1,58 @@
 # Local Hybrid Retrieval-Augmented Document QA
 
-A privacy-preserving, hybrid retrieval-augmented generation (RAG) system for document question-answering that combines sparse (BM25) and dense (embedding-based) retrieval to optimize performance while minimizing hallucinations.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+
+A **100% local**, privacy-preserving retrieval-augmented generation (RAG) system for document question-answering. Combines sparse (BM25) and dense (BGE embeddings) retrieval with local LLM inference (Ollama/Llama 3.2) to optimize performance while maintaining complete data sovereignty.
+
+> **Associated Paper**: "Local Hybrid Retrieval-Augmented Document QA" by Paolo Astrino  
+> **Università Ca' Foscari Venezia** | Master's Thesis 2025
+
+---
 
 ## 🚀 Quick Start
 
-1. **Clone and install**:
+### Prerequisites
+
+- Python 3.11+
+- [Ollama](https://ollama.com) installed and running
+- CUDA-capable GPU (optional, for acceleration)
+
+### Installation
+
+1. **Clone the repository**:
 
    ```bash
-   git clone <repository-url>
-   cd local-hybrid-rag-qa
+   git clone https://github.com/PaoloAstrino/Local_RAG.git
+   cd Local_RAG
+   ```
+
+2. **Install dependencies**:
+
+   ```bash
    pip install -r requirements.txt
    ```
 
-2. **Start the web interface**:
+3. **Pull the Llama model**:
+
    ```bash
-   python src/server_MPC.py
+   ollama pull llama3.2
    ```
-   Open `http://localhost:5000` in your browser.
+
+4. **Start the system**:
+
+   ```bash
+   # Terminal 1: Start the server
+   python src/server.py
+
+   # Terminal 2: Start the client
+   python src/client.py
+   ```
+
+5. **Open the web interface**:
+   ```
+   http://localhost:5001
+   ```
 
 ## 📚 Documentation
 

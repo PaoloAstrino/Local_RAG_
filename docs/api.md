@@ -1,181 +1,426 @@
 # API Reference
 
-This document provides a comprehensive reference for the Local Hybrid Retrieval-Augmented Document QA API.
+This document provides a comprehensive reference for the Local Hybrid Retrieval-Augmented Document QA system.
 
 ## Table of Contents
 
-- [Core Classes](#core-classes)
-- [Retrieval API](#retrieval-api)
-- [Generation API](#generation-api)
-- [Evaluation API](#evaluation-api)
-- [Web API](#web-api)
+- [Socket Communication Protocol](#socket-communication-protocol)
+- [Server Commands](#server-commands)
+- [HTTP API Endpoints](#http-api-endpoints)
+- [Configuration](#configuration)
 
-## Core Classes
+## Socket Communication Protocol
 
-### HybridRetriever
+The system uses JSON-based commands over TCP sockets for client-server communication.
 
-Main class for hybrid retrieval combining sparse and dense methods.
-
-```python
-class HybridRetriever:
-    def __init__(self,
-                 sparse_weight: float = 0.3,
-                 dense_weight: float = 0.7,
-                 embedding_model: str = "all-MiniLM-L6-v2",
-                 device: str = "auto"):
-        """Initialize hybrid retriever.
-
-        Args:
-            sparse_weight: Weight for BM25 scores (0.0 to 1.0)
-            dense_weight: Weight for embedding scores (0.0 to 1.0)
-            embedding_model: Sentence transformer model name
-            device: Device for computation ('cpu', 'cuda', 'auto')
-        """
-
-    def retrieve(self,
-                query: str,
-                corpus: List[str],
-                top_k: int = 10) -> List[Dict[str, Any]]:
-        """Retrieve top-k relevant documents.
-
-        Args:
-            query: Search query string
-            corpus: List of document texts
-            top_k: Number of results to return
-
-        Returns:
-            List of result dictionaries with keys:
-            - 'text': Document text
-            - 'score': Combined score
-            - 'sparse_score': BM25 score
-            - 'dense_score': Embedding score
-            - 'index': Original corpus index
-        """
-
-    def batch_retrieve(self,
-                      queries: List[str],
-                      corpus: List[str],
-                      top_k: int = 10,
-                      batch_size: int = 8) -> List[List[Dict[str, Any]]]:
-        """Retrieve documents for multiple queries efficiently.
-
-        Args:
-            queries: List of query strings
-            corpus: List of document texts
-            top_k: Number of results per query
-            batch_size: Batch size for processing
-
-        Returns:
-            List of result lists (one per query)
-        """
-```
-
-### Judge
-
-Hallucination detection using LLM-as-Judge approach.
+### Connection Parameters
 
 ```python
-class Judge:
-    def __init__(self,
-                 model: str = "local",
-                 threshold: float = 0.3):
-        """Initialize hallucination judge.
-
-        Args:
-            model: Model type ('local' or 'api')
-            threshold: Hallucination threshold (0.0 to 1.0)
-        """
-
-    def evaluate(self,
-                answer: str,
-                context: str,
-                question: str = None) -> float:
-        """Evaluate answer for hallucinations.
-
-        Args:
-            answer: Generated answer text
-            context: Source context text
-            question: Original question (optional)
-
-        Returns:
-            Hallucination score (0.0 = no hallucination, 1.0 = high hallucination)
-        """
-
-    def is_hallucination(self, score: float) -> bool:
-        """Check if score indicates hallucination.
-
-        Args:
-            score: Hallucination score
-
-        Returns:
-            True if hallucination detected
-        """
+HOST = '127.0.0.1'  # Local server
+PORT = 65432         # Server port
 ```
 
-## Retrieval API
-
-### SparseRetriever (BM25)
+### Command Structure
 
 ```python
-class BM25Retriever:
-    def __init__(self, k1: float = 1.5, b: float = 0.75):
-        """Initialize BM25 retriever.
-
-        Args:
-            k1: Term frequency scaling parameter
-            b: Document length normalization parameter
-        """
-
-    def fit(self, corpus: List[str]) -> None:
-        """Fit retriever on corpus.
-
-        Args:
-            corpus: List of document texts
-        """
-
-    def score(self, query: str, corpus: List[str] = None) -> np.ndarray:
-        """Score query against corpus.
-
-        Args:
-            query: Query string
-            corpus: Optional corpus (uses fitted corpus if None)
-
-        Returns:
-            Array of BM25 scores
-        """
+{
+    "command": str,      # Command name
+    # Additional parameters based on command
+}
 ```
 
-### DenseRetriever (Embeddings)
+### Response Structure
 
 ```python
-class DenseRetriever:
-    def __init__(self,
-                 model_name: str = "all-MiniLM-L6-v2",
-                 device: str = "auto"):
-        """Initialize dense retriever.
-
-        Args:
-            model_name: Sentence transformer model name
-            device: Computation device
-        """
-
-    def encode_corpus(self, corpus: List[str]) -> None:
-        """Encode and index corpus.
-
-        Args:
-            corpus: List of document texts
-        """
-
-    def score(self, query: str) -> np.ndarray:
-        """Score query against indexed corpus.
-
-        Args:
-            query: Query string
-
-        Returns:
-            Array of cosine similarity scores
-        """
+{
+    "status": str,       # "success" or "error"
+    "message": str,      # Optional message
+    # Additional data based on command
+}
 ```
+
+## Server Commands
+
+### upload
+
+Upload and index documents for retrieval.
+
+```python
+command = {
+    "command": "upload",
+    "file_paths": [str]  # List of absolute file paths
+}
+
+response = {
+    "status": "success",
+    "message": "Files uploaded and retriever initialized successfully",
+    "files": [str]  # List of successfully uploaded filenames
+}
+```
+
+**Supported formats**: PDF, CSV, JSON, TXT
+
+**Process**:
+
+1. Validates file types and sizes
+2. Loads documents via specialized loaders
+3. Chunks text (400 chars, 150 overlap)
+4. Generates BGE embeddings (cached)
+5. Builds hybrid retriever (30% BM25, 70% semantic)
+
+### ask
+
+Query the system with a question.
+
+```python
+command = {
+    "command": "ask",
+    "question": str  # User question
+}
+
+response = {
+    "status": "success",
+    "answer": str  # Generated answer from Llama 3.2
+}
+```
+
+**Process**:
+
+1. Retrieves top-5 relevant chunks (hybrid retrieval)
+2. Constructs prompt with chat history + context + question
+3. Calls Ollama API (Llama 3.2) locally
+4. Returns answer and updates chat history
+
+### get_files
+
+List currently uploaded files.
+
+```python
+command = {
+    "command": "get_files"
+}
+
+response = {
+    "status": "success",
+    "files": [str]  # List of uploaded filenames
+}
+```
+
+### get_chat_history
+
+Retrieve conversation history.
+
+```python
+command = {
+    "command": "get_chat_history"
+}
+
+response = {
+    "status": "success",
+    "chat_history": [
+        (question: str, answer: str, retrieved_docs: List[str])
+    ]
+}
+```
+
+### get_status
+
+Check system status.
+
+```python
+command = {
+    "command": "get_status"
+}
+
+response = {
+    "status": "success",
+    "num_files": int,
+    "files": [str],
+    "qa_chain_initialized": bool
+}
+```
+
+### reset
+
+Clear all data and reinitialize system.
+
+```python
+command = {
+    "command": "reset"
+}
+
+response = {
+    "status": "success",
+    "message": "System reset; all files and QA system cleared",
+    "files": []
+}
+```
+
+### delete_file
+
+Remove a specific file.
+
+```python
+command = {
+    "command": "delete_file",
+    "filename": str
+}
+
+response = {
+    "status": "success",
+    "message": "File 'filename' deleted",
+    "files": [str]  # Remaining files
+}
+```
+
+### get_document_content
+
+Retrieve raw content of an uploaded file.
+
+```python
+command = {
+    "command": "get_document_content",
+    "filename": str
+}
+
+response = {
+    "status": "success",
+    "filename": str,
+    "content": str  # Full document text
+}
+```
+
+## HTTP API Endpoints
+
+The Flask client (`src/client.py`) exposes HTTP endpoints that forward to the server.
+
+### POST /rag_upload
+
+Upload documents.
+
+**Request**:
+
+```http
+POST /rag_upload HTTP/1.1
+Content-Type: multipart/form-data
+
+files: [file1.pdf, file2.csv, ...]
+```
+
+**Response**:
+
+```json
+{
+  "status": "success",
+  "message": "Files uploaded and retriever initialized successfully",
+  "files": ["file1.pdf", "file2.csv"]
+}
+```
+
+### POST /rag_ask
+
+Ask a question.
+
+**Request**:
+
+```http
+POST /rag_ask HTTP/1.1
+Content-Type: application/json
+
+{
+  "question": "What is the main topic?"
+}
+```
+
+**Response**:
+
+```json
+{
+  "status": "success",
+  "answer": "The main topic is..."
+}
+```
+
+### GET /rag_get_files
+
+List uploaded files.
+
+**Response**:
+
+```json
+{
+  "status": "success",
+  "files": ["file1.pdf", "file2.csv"]
+}
+```
+
+### GET /rag_get_chat_history
+
+Get conversation history.
+
+**Response**:
+
+```json
+{
+  "status": "success",
+  "chat_history": [
+    ["Question 1?", "Answer 1", ["chunk1", "chunk2"]],
+    ["Question 2?", "Answer 2", ["chunk3", "chunk4"]]
+  ]
+}
+```
+
+### POST /rag_reset
+
+Reset system.
+
+**Response**:
+
+```json
+{
+  "status": "success",
+  "message": "System reset; all files and QA system cleared"
+}
+```
+
+### GET /rag_get_status
+
+Check system status.
+
+**Response**:
+
+```json
+{
+  "status": "success",
+  "num_files": 2,
+  "files": ["file1.pdf", "file2.csv"],
+  "qa_chain_initialized": true
+}
+```
+
+## Configuration
+
+### Hybrid Retriever Weights
+
+Edit `src/server.py`, function `load_db`:
+
+```python
+ensemble_retriever = EnsembleRetriever(
+    retrievers=[bm25_retriever, semantic_retriever],
+    weights=[0.3, 0.7]  # [sparse, dense] - optimal from paper
+)
+```
+
+### Ollama Settings
+
+Edit `src/server.py`, function `call_external_llm_api`:
+
+```python
+ollama_url = os.getenv('OLLAMA_API_URL', 'http://localhost:11434/api/generate')
+
+payload = {
+    "model": "llama3.2",
+    "prompt": prompt,
+    "stream": False,
+    "options": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "top_k": 40,
+        "num_predict": 1024
+    }
+}
+```
+
+### Document Chunking
+
+Edit `src/server.py`, function `load_db`:
+
+```python
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=400,      # Characters per chunk
+    chunk_overlap=150    # Overlap between chunks
+)
+```
+
+### Embedding Model
+
+Edit `src/server.py`, function `get_embeddings`:
+
+```python
+_underlying_embeddings = HuggingFaceEmbeddings(
+    model_name="BAAI/bge-base-en-v1.5",  # BGE embeddings
+    model_kwargs={'device': 'cuda' if torch.cuda.is_available() else 'cpu'}
+)
+```
+
+### Environment Variables
+
+Create a `.env` file for optional configuration:
+
+```bash
+# Ollama API endpoint (default: http://localhost:11434/api/generate)
+OLLAMA_API_URL=http://localhost:11434/api/generate
+
+# Server socket configuration
+LOCAL_SERVER_HOST=127.0.0.1
+LOCAL_SERVER_PORT=65432
+
+# Client configuration
+CLIENT_PORT=5001
+```
+
+## Error Handling
+
+All responses include a `status` field:
+
+- `"success"`: Operation completed successfully
+- `"error"`: Operation failed, check `message` field for details
+
+Example error response:
+
+```json
+{
+  "status": "error",
+  "message": "Retriever not initialized. Upload files first."
+}
+```
+
+Common errors:
+
+- **"No files provided"**: Upload command with empty file_paths
+- **"Retriever not initialized"**: Asking questions before uploading documents
+- **"File not found"**: Referencing non-existent file
+- **"Ollama API call failed"**: Ollama not running or model not available
+- **"Failed to initialize retriever"**: Document processing error (check logs)
+  class DenseRetriever:
+  def **init**(self,
+  model_name: str = "all-MiniLM-L6-v2",
+  device: str = "auto"):
+  """Initialize dense retriever.
+
+          Args:
+              model_name: Sentence transformer model name
+              device: Computation device
+          """
+
+      def encode_corpus(self, corpus: List[str]) -> None:
+          """Encode and index corpus.
+
+          Args:
+              corpus: List of document texts
+          """
+
+      def score(self, query: str) -> np.ndarray:
+          """Score query against indexed corpus.
+
+          Args:
+              query: Query string
+
+          Returns:
+              Array of cosine similarity scores
+          """
+
+````
 
 ## Generation API
 
@@ -224,7 +469,7 @@ class Generator:
         Returns:
             Generated answer
         """
-```
+````
 
 ## Evaluation API
 
