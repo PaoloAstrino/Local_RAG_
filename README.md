@@ -12,9 +12,7 @@ A **100% local**, privacy-preserving retrieval-augmented generation (RAG) system
 
 Watch a live demonstration of the chatbot answering questions about a CV:
 
-<video src="demo_chatbot.mp4" controls width="640" height="360">
-  Your browser does not support the video tag. [Download the demo video](demo_chatbot.mp4)
-</video>
+[View Demo Video](demo_chatbot.mp4)
 
 ---
 
