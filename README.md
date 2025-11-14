@@ -90,16 +90,34 @@ User Query → Hybrid Retrieval (BM25 + Embeddings) → Generation → Hallucina
 
 ## 📝 Citation
 
-If you use this work in your research:
+If you use this work in your research, please cite:
 
+**BibTeX:**
 ```bibtex
 @article{astrino2025local,
   title={Local Hybrid Retrieval-Augmented Document QA},
   author={Astrino, Paolo},
-  journal={arXiv preprint},
-  year={2025}
+  journal={arXiv preprint arXiv:2511.10297},
+  year={2025},
+  eprint={2511.10297},
+  archivePrefix={arXiv},
+  primaryClass={cs.CL},
+  url={https://arxiv.org/abs/2511.10297},
+  doi={10.48550/arXiv.2511.10297}
 }
 ```
+
+**Text:**
+Astrino, P. (2025). Local Hybrid Retrieval-Augmented Document QA. arXiv preprint arXiv:2511.10297 [cs.CL].
+
+**arXiv Details:**
+- **arXiv ID:** 2511.10297
+- **Category:** Computation and Language (cs.CL)
+- **ACM Classes:** I.2.7; H.3.3
+- **Pages:** 10 pages, 5 figures, 3 tables
+- **Format:** Conference-style (ACL format)
+- **DOI:** https://doi.org/10.48550/arXiv.2511.10297
+- **Submitted:** November 13, 2025
 
 ## 📄 License
 

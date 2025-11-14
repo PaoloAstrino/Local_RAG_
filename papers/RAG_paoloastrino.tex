@@ -43,15 +43,13 @@
 \title{Local Hybrid Retrieval-Augmented Document QA}
 
 \author{Paolo Astrino \\
-  Master Student, Università Ca' Foscari Venezia \\
-  \texttt{paoloastrino01@gmail.com} \\
-  \url{https://paoloastrino.github.io/}}
+  Università Ca' Foscari Venezia, Italy}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Organizations need conversational access to private documents without sending data to external services. We present a 100\% local retrieval-augmented generation (RAG) system that performs all operations—document processing, embedding generation, retrieval, and language model inference—entirely on-premises using open-source components. The system employs a lightweight client--server design with an empirically tuned hybrid retriever (BM25 + BGE embeddings) and Ollama-hosted Llama 3.2 for generation. A 10-point weight sweep yields an optimal 30/70 sparse–dense mix with strong ranking quality across SQuAD, MS MARCO, and Natural Questions (MRR 0.805, 0.250, 0.813; Recall@10 0.974, 0.620, 0.978). GPU acceleration provides a $4.2\times$ embedding throughput gain on commodity hardware. Reliability assessment with an LLM-as-Judge over 500 stratified queries per dataset shows low hallucination (0.8\% / 6.2\%) and high faithfulness ($\ge 4.79/5$). We release artifacts (weight sweeps, bootstrap scripts, cached indices, environment spec) to support reproduction (code: \cite{localragrepo}). Results demonstrate that a fully local, resource-conscious hybrid setup can deliver robust, low-hallucination document QA without compromising data sovereignty.
+Organizations handling sensitive documents face a critical dilemma: adopt cloud-based AI systems that offer powerful question-answering capabilities but compromise data privacy, or maintain local processing that ensures security but delivers poor accuracy. We present a question-answering system that resolves this trade-off by combining semantic understanding with keyword precision, operating entirely on local infrastructure without external dependencies. Our approach demonstrates that organizations can achieve competitive accuracy on complex queries across legal, scientific, and conversational documents while maintaining complete data sovereignty. By systematically balancing two complementary retrieval strategies and leveraging consumer-grade hardware acceleration, the system delivers reliable answers with minimal errors, enabling regulated industries such as healthcare, finance, and legal services to adopt conversational document AI without transmitting proprietary information to external providers. This work establishes that privacy and performance need not be mutually exclusive in enterprise AI deployment.
 \end{abstract}
 
 \section{Introduction}
@@ -142,15 +140,28 @@ The system automatically detects CUDA availability and leverages GPU resources f
 
 \subsection{Datasets and Methodology}
 
-We conducted comprehensive evaluation across three benchmark datasets:
+We conducted comprehensive evaluation across three benchmark datasets (Table \ref{tab:datasets}):
 
-\begin{itemize}
-\item \textbf{SQuAD v1.1:} 10,570 reading comprehension questions with guaranteed answers in Wikipedia contexts \cite{squad}
-\item \textbf{MS MARCO v2.1:} 9,706 real Bing search queries with sparse relevance patterns \cite{msmarco}
-\item \textbf{Natural Questions:} 3,610 real Google Search queries with Wikipedia articles \cite{naturalquestions}
-\end{itemize}
+\begin{table}[htbp]
+\centering
+\caption{Benchmark datasets for retrieval evaluation.}
+\label{tab:datasets}
+\begingroup
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{Dataset} & \textbf{Size} & \textbf{Source} \\
+\midrule
+SQuAD v1.1 & 10,570 & Wikipedia \cite{squad} \\
+MS MARCO v2.1 & 9,706 & Bing \cite{msmarco} \\
+Natural Questions & 3,610 & Google \cite{naturalquestions} \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
 
-Evaluation employed multiple metrics including Recall@K, Mean Reciprocal Rank (MRR), exact match rates, and distributional statistics across 10 hybrid weight configurations (10\%-100\% sparse weight).
+SQuAD v1.1 contains reading comprehension questions with guaranteed answers in Wikipedia contexts; MS MARCO v2.1 comprises real Bing search queries with sparse relevance patterns; Natural Questions includes real Google Search queries paired with Wikipedia articles. Evaluation employed multiple metrics including Recall@K, Mean Reciprocal Rank (MRR), exact match rates, and distributional statistics across 10 hybrid weight configurations (10\%-100\% sparse weight).
 
 \subsection{Evaluation Metrics}\label{subsec:eval-metrics}
 We track four categories: (i) \textit{coverage} (Recall@K / Hit@K), (ii) \textit{ranking quality} (MRR, mean/median rank, Rank-1 count), (iii) \textit{answer fidelity} (Exact Match, Answer Coverage), and (iv) \textit{reliability} (Hallucination Rate, Faithfulness 1--5, Confidence 1--5, Success = 1 - Hallucination).
@@ -208,15 +219,9 @@ NQ & Hybrid & \textbf{0.813} & \textbf{0.978} & \textbf{0.987} & 2.10 \\
 \end{table}
 
 \subsection{Statistical Reliability and Confidence Intervals}
-We quantify uncertainty for principal metrics (MRR, Recall@10, Hallucination Rate) using non-parametric bootstrap resampling (1,000 samples) over the query set. For each dataset and metric:
-\begin{enumerate}
-  \item Sample \(|Q|\) queries with replacement.
-  \item Recompute metric on the resampled set.
-  \item Repeat 1,000×; take the 2.5th and 97.5th percentiles as the 95\% confidence interval (CI).
-\end{enumerate}
-For binary proportions (Recall@K, Hallucination Rate) we cross-validated bootstrap intervals against Wilson score intervals; they were consistent (differences <0.2 percentage points).
+We quantify uncertainty for principal metrics (MRR, Recall@10, Hallucination Rate) using non-parametric bootstrap resampling (1,000 samples) over the query set. For each dataset and metric, we sample \(|Q|\) queries with replacement, recompute the metric on the resampled set, and repeat this process 1,000 times, taking the 2.5th and 97.5th percentiles as the 95\% confidence interval (CI). For binary proportions (Recall@K, Hallucination Rate) we cross-validated bootstrap intervals against Wilson score intervals; they were consistent (differences <0.2 percentage points).
 
-\begin{table}[ht]
+\begin{table}[tbp]
 \centering
 \caption{Point estimates with 95\% CIs (1{,}000 bootstrap resamples). Hallucination for NQ pending.}
 \label{tab:confidence}
@@ -239,8 +244,6 @@ NQ & HallucRate & --- & --- & Scheduled \\
 \end{table}
 
 The narrow intervals for SQuAD and Natural Questions indicate stable rankings; wider Hallucination CIs reflect smaller judged sample size (500). Future work: stratified bootstrap by question category and paired significance testing (e.g., randomization test) for retrieval method deltas.
-
-\FloatBarrier % ensure Confidence table placed before proceeding
 
 \subsection{Overall Performance}
 
@@ -344,24 +347,11 @@ GPU acceleration provides substantial performance improvements for embedding-int
 
 \subsection{Scalability Characteristics}
 
-Performance testing revealed \cite{pytorchcuda,johnson2019faiss}:
-\begin{itemize}
-\item Single-user response times: ~2 seconds for small files
-\item Concurrent load (10 users): 3-4× response time increase
-\item Large file processing: 100MB PDFs require ~4 minutes (CPU) vs ~1 minute (GPU) \cite{pytorchcuda}
-\item Memory efficiency: Linear scaling with document collection size
-\item GPU utilization: Optimal at 85-90\% capacity under heavy load
-\end{itemize}
+Performance testing revealed single-user response times of approximately 2 seconds for small files, with 3--4× latency increase under concurrent load (10 users) \cite{pytorchcuda,johnson2019faiss}. Large file processing (100MB PDFs) requires approximately 4 minutes on CPU versus 1 minute with GPU acceleration \cite{pytorchcuda}. Memory efficiency scales linearly with document collection size, and GPU utilization reaches optimal performance at 85--90\% capacity under heavy load.
 
 \subsection{Cost-Effectiveness Analysis}
 
-Economic evaluation of LLM-as-Judge methodology demonstrates significant cost advantages \cite{llm_judge}:
-
-\begin{itemize}
-\item Gemini evaluation cost: \textasciitilde\$0.01 per call vs \$0.03 for GPT-4
-\item Budget control: Automatic stop at configurable limits (\$50 default)
-\item Resume capability: Zero data loss during interruptions
-\end{itemize}
+Economic evaluation of LLM-as-Judge methodology demonstrates significant cost advantages \cite{llm_judge}: Gemini evaluation costs approximately \$0.01 per call (versus \$0.03 for GPT-4), with automatic budget controls stopping at configurable limits (\$50 default) and resume capability ensuring zero data loss during interruptions.
 
 \subsection{System Environment and Resources}
 Table~\ref{tab:environment} documents the hardware, software stack, and runtime performance characteristics to support reproducibility and contextualize efficiency claims.
