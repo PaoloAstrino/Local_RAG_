@@ -8,6 +8,12 @@ A **100% local**, privacy-preserving retrieval-augmented generation (RAG) system
 > **Associated Paper**: "Local Hybrid Retrieval-Augmented Document QA" by Paolo Astrino  
 > **Università Ca' Foscari Venezia** | Master's Thesis 2025
 
+## 🎥 Demo
+
+Watch a live demonstration of the chatbot answering questions about a CV:
+
+[View Demo Video](demo_chatbot.mp4)
+
 ---
 
 ## 🚀 Quick Start
