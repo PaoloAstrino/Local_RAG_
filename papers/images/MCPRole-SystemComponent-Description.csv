@@ -1,6 +1,0 @@
-"MCP Role","System Component","Description"
-"Host","Web browser/desktop app","User-facing interface; initiates requests"
-"Client","client_MPC.py","Flask-based API; maintains 1:1 connection with the server"
-"Server","server_MPC.py","Handles RAG, file management, LLM integration"
-"Local Data","uploads/directory","Stores user-uploaded files and server-managed databases"
-"Remote Service","External LLM APIs","Accessed by the client for remote inference when configured"
